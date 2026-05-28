@@ -5,7 +5,7 @@ created: 2026-05-27
 paper: "Training Agents Inside of Scalable World Models"
 short_name: "Dreamer 4"
 arxiv: "2509.24527"
-local_pdf: "Dreamer-4.pdf"
+local_pdf: "pdfs/Dreamer-4.pdf"
 ---
 
 # Dreamer 4 - Training Agents Inside Scalable World Models

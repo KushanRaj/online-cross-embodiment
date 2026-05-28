@@ -11,18 +11,12 @@ The main thesis we are tracking:
 
 ## Where Things Live
 
-- `paper-catalog.md` - compact catalog of the papers in this thread.
-- `10_SOURCES/Papers/` - paper-level notes copied from Obsidian.
-- `20_CONCEPTS/ML/Robotics/Reports/` - larger synthesis reports: training methodology, benchmarks, datasets, compute, experiments, and public-review notes.
-- `30_MOCs/` - maps of content / navigation notes.
+- `Robotics World Models.md` - the top-level map of content.
+- `papers/` - paper-level notes plus the paper catalog.
+- `pdfs/` - local paper PDFs.
+- `experiment-design/reports/` - larger synthesis reports: training methodology, benchmarks, datasets, compute, experiments, and public-review notes.
 - `docs/planning/` - working experiment notes and older planning artifacts.
 - `docs/slack/` - Slack-facing mirror artifacts, including the paper-list CSV draft.
-
-## What Is Intentionally Not Tracked
-
-The local working folder contains PDFs, screenshots, rollout videos, VM setup scripts, temporary extraction files, and scratch notes. Those are intentionally ignored by git so the public repo stays readable and does not accidentally publish bulky or private material.
-
-If a paper PDF is needed, use the citation/link in `paper-catalog.md` or the corresponding source note rather than committing the PDF.
 
 ## Current Research Direction
 

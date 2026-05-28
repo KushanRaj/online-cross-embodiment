@@ -4,7 +4,7 @@ topic: robotics-world-models
 created: 2026-05-25
 paper: "Reconstruction or Semantics? What Makes a Latent Space Useful for Robotic World Models"
 arxiv: "2605.06388"
-local_pdf: "Reconstruction-or-Semantics-Semantic-WM.pdf"
+local_pdf: "pdfs/Reconstruction-or-Semantics-Semantic-WM.pdf"
 ---
 
 # Reconstruction or Semantics - Semantic Latents for Robotic World Models

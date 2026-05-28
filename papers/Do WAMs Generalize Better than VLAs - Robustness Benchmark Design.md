@@ -4,8 +4,7 @@ topic: robotics-world-models
 created: 2026-05-26
 paper: "Do World Action Models Generalize Better than VLAs? A Robustness Study"
 arxiv: "2603.22078"
-local_pdf: "papers/2603.22078.pdf"
-local_text: "papers/2603.22078.txt"
+local_pdf: "pdfs/2603.22078.pdf"
 ---
 
 # Do WAMs Generalize Better than VLAs - Robustness Benchmark Design

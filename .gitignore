@@ -1,33 +1,24 @@
 *
 
 !.gitignore
+!.gitattributes
 !README.md
 !OBSIDIAN.md
-!paper-catalog.md
+!Robotics World Models.md
 
-!00_INBOX/
-!00_INBOX/.gitkeep
+!papers/
+!papers/*.md
 
-!10_SOURCES/
-!10_SOURCES/**
-
-!20_CONCEPTS/
-!20_CONCEPTS/**
-
-!30_MOCs/
-!30_MOCs/**
-
-!40_DAILIES/
-!40_DAILIES/.gitkeep
-
-!90_MEDIA/
-!90_MEDIA/.gitkeep
+!experiment-design/
+!experiment-design/**
 
 !docs/
 !docs/**
 
+!pdfs/
+!pdfs/*.pdf
+
 .DS_Store
-*.pdf
 *.mp4
 *.mov
 *.gif

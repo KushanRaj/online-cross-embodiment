@@ -4,7 +4,7 @@ Local paper: `VLA-JEPA.pdf`
 
 Extracted text: `tmp/pdfs/vla_jepa.txt`
 
-Obsidian note: `10_SOURCES/Papers/Robotics World Models/VLA-JEPA - Latent World Model for VLA.md`
+Obsidian note: `papers/VLA-JEPA - Latent World Model for VLA.md`
 
 ## Core Takeaway
 

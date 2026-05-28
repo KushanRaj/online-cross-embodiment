@@ -4,9 +4,8 @@ topic: robotics-world-models
 created: 2026-05-28
 paper: "Cosmos Policy: Fine-Tuning Video Models for Visuomotor Control and Planning"
 arxiv: "2601.16163"
-local_pdf: "Cosmos-Policy.pdf"
-local_text: "tmp/pdfs/cosmos_policy.txt"
-repo_review: "cosmos-policy-review.md"
+local_pdf: "pdfs/Cosmos-Policy.pdf"
+repo_review: "docs/planning/cosmos-policy-review.md"
 ---
 
 # Cosmos Policy - Video Diffusion Planning and Value Models

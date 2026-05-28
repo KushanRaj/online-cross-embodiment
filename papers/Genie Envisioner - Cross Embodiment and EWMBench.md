@@ -4,8 +4,7 @@ topic: robotics-world-models
 created: 2026-05-27
 paper: "Genie Envisioner: A Unified World Foundation Platform for Robotic Manipulation"
 arxiv: "2508.05635"
-local_pdf: "papers/2508.05635.pdf"
-local_text: "papers/2508.05635.txt"
+local_pdf: "pdfs/2508.05635.pdf"
 ---
 
 # Genie Envisioner - Cross Embodiment and EWMBench

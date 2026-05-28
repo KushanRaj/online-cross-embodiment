@@ -4,7 +4,7 @@ topic: robotics-world-models
 created: 2026-05-27
 paper: "Joint Embedding vs Reconstruction: Provable Benefits of Latent Space Prediction for Self Supervised Learning"
 arxiv: "2505.12477"
-local_pdf: "Joint-Embedding-vs-Reconstruction-SSL.pdf"
+local_pdf: "pdfs/Joint-Embedding-vs-Reconstruction-SSL.pdf"
 ---
 
 # Joint Embedding vs Reconstruction - SSL Inductive Bias

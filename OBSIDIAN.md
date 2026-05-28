@@ -26,24 +26,23 @@ find "$HOME/Documents/Obsidian Vault" -maxdepth 2 -type d | sort
 
 For file edits, prefer `apply_patch`, the same way repository files are edited.
 
-## Where Notes Go
+## Repo Layout
 
-Use the existing vault structure:
+Use the repo structure directly:
 
-- `00_INBOX`: raw notes, quick thoughts, unresolved dumps.
-- `10_SOURCES`: papers, talks, repositories, datasets, and external references.
-- `20_CONCEPTS`: evergreen concept notes.
-- `30_MOCs`: maps of content for active research areas.
-- `40_DAILIES`: daily notes and short session logs.
-- `90_MEDIA`: media attachments when they should live inside the vault.
+- `Robotics World Models.md`: top-level map of content.
+- `papers/`: paper notes and `paper-catalog.md`.
+- `pdfs/`: tracked local PDFs.
+- `experiment-design/`: experiment proposals, synthesis reports, and compute/benchmark notes.
+- `docs/`: planning artifacts and Slack-facing exports.
 
 For paper notes, use:
 
-`10_SOURCES/Papers/<area>/<paper-title>.md`
+`papers/<paper-title>.md`
 
-For active research maps, use:
+For active research maps, use the root MOC:
 
-`30_MOCs/<topic>.md`
+`Robotics World Models.md`
 
 ## What To Put In Obsidian
 
@@ -56,42 +55,42 @@ Put distilled notes in Obsidian:
 - links between concepts,
 - decisions and research direction.
 
-Do not dump full paper text into Obsidian. Keep PDFs outside git or in another explicit paper directory, and link to them from the note when useful.
+Do not dump full paper text into Obsidian. Keep PDFs in `pdfs/` and link to them from the note when useful.
 
 ## Current Robotics Notes
 
 Current MOC:
 
-`30_MOCs/Robotics World Models.md`
+`Robotics World Models.md`
 
 Current paper notes:
 
-`10_SOURCES/Papers/Robotics World Models/Reconstruction or Semantics - Semantic Latents for Robotic World Models.md`
+`papers/Reconstruction or Semantics - Semantic Latents for Robotic World Models.md`
 
-`10_SOURCES/Papers/Robotics World Models/Dreamer 4 - Training Agents Inside Scalable World Models.md`
+`papers/Dreamer 4 - Training Agents Inside Scalable World Models.md`
 
-`10_SOURCES/Papers/Robotics World Models/Cosmos Policy - Video Diffusion Planning and Value Models.md`
+`papers/Cosmos Policy - Video Diffusion Planning and Value Models.md`
 
-`10_SOURCES/Papers/Robotics World Models/Fast-WAM - Video Co-Training Without Test-Time Future Imagination.md`
+`papers/Fast-WAM - Video Co-Training Without Test-Time Future Imagination.md`
 
-`10_SOURCES/Papers/Robotics World Models/LingBot-VA - Causal Autoregressive Video-Action World Model.md`
+`papers/LingBot-VA - Causal Autoregressive Video-Action World Model.md`
 
-`10_SOURCES/Papers/Robotics World Models/Joint Embedding vs Reconstruction - SSL Inductive Bias.md`
+`papers/Joint Embedding vs Reconstruction - SSL Inductive Bias.md`
 
-`10_SOURCES/Papers/Robotics World Models/VLA-JEPA - Latent World Model for VLA.md`
+`papers/VLA-JEPA - Latent World Model for VLA.md`
 
-Local PDFs are intentionally not tracked in the public repo. Common local filenames:
+Common PDF paths:
 
-`Reconstruction-or-Semantics-Semantic-WM.pdf`
+`pdfs/Reconstruction-or-Semantics-Semantic-WM.pdf`
 
-`Dreamer-4.pdf`
+`pdfs/Dreamer-4.pdf`
 
-`Cosmos-Policy.pdf`
+`pdfs/Cosmos-Policy.pdf`
 
-`Fast-VAM.pdf`
+`pdfs/Fast-VAM.pdf`
 
-`LingBot-VA.pdf`
+`pdfs/LingBot-VA.pdf`
 
-`Joint-Embedding-vs-Reconstruction-SSL.pdf`
+`pdfs/Joint-Embedding-vs-Reconstruction-SSL.pdf`
 
-`VLA-JEPA.pdf`
+`pdfs/VLA-JEPA.pdf`

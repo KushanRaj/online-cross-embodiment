@@ -4,8 +4,7 @@ topic: robotics-world-models
 created: 2026-05-28
 paper: "Fast-WAM: Do World Action Models Need Test-time Future Imagination?"
 arxiv: "2603.16666"
-local_pdf: "Fast-VAM.pdf"
-local_text: "tmp/pdfs/fast_vam.txt"
+local_pdf: "pdfs/Fast-VAM.pdf"
 ---
 
 # Fast-WAM - Video Co-Training Without Test-Time Future Imagination

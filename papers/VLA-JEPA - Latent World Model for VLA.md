@@ -4,7 +4,7 @@ topic: robotics-world-models
 created: 2026-05-27
 paper: "VLA-JEPA: Enhancing Vision-Language-Action Model with Latent World Model"
 arxiv: "2602.10098"
-local_pdf: "VLA-JEPA.pdf"
+local_pdf: "pdfs/VLA-JEPA.pdf"
 ---
 
 # VLA-JEPA - Latent World Model for VLA

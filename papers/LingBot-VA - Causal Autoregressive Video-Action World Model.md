@@ -4,8 +4,7 @@ topic: robotics-world-models
 created: 2026-05-28
 paper: "Causal World Modeling for Robot Control"
 arxiv: "2601.21998"
-local_pdf: "LingBot-VA.pdf"
-local_text: "tmp/pdfs/lingbot_va.txt"
+local_pdf: "pdfs/LingBot-VA.pdf"
 ---
 
 # LingBot-VA - Causal Autoregressive Video-Action World Model
