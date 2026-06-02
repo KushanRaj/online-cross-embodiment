@@ -15,6 +15,7 @@ The main thesis we are tracking:
 - `papers/` - paper-level notes plus the paper catalog.
 - `pdfs/` - local paper PDFs.
 - `experiment-design/reports/` - larger synthesis reports: training methodology, benchmarks, datasets, compute, experiments, and public-review notes.
+- `experiments/` - tracked experiment code. Edit locally, sync/pull to EC2, run against remote data/checkpoints there.
 - `docs/planning/` - working experiment notes and older planning artifacts.
 - `docs/slack/` - Slack-facing mirror artifacts, including the paper-list CSV draft.
 

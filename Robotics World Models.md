@@ -13,6 +13,7 @@ This MOC tracks the research thread around planning, world-action models, semant
 - [[Reconstruction or Semantics - Semantic Latents for Robotic World Models]]
 - [[Dreamer 4 - Training Agents Inside Scalable World Models]]
 - [[Cosmos Policy - Video Diffusion Planning and Value Models]]
+- [[Cosmos 3 - Omnimodal World Model]]
 - [[Do WAMs Generalize Better than VLAs - Robustness Benchmark Design]]
 - [[Fast-WAM - Video Co-Training Without Test-Time Future Imagination]]
 - [[Genie Envisioner - Cross Embodiment and EWMBench]]
@@ -39,6 +40,7 @@ The current model taxonomy matters for experiment design:
 - **Video-co-trained direct policies** such as [[Fast-WAM - Video Co-Training Without Test-Time Future Imagination]] use future prediction during training but remove explicit future generation at inference.
 - **Action-conditioned world simulators** such as GE-Sim map observation + language + candidate action to future video, making them structurally closer to counterfactual planning.
 - **Value-scored planners** such as [[Cosmos Policy - Video Diffusion Planning and Value Models]] sample candidate actions, predict future states, and choose by predicted value.
+- **Omnimodal world/action foundations** such as [[Cosmos 3 - Omnimodal World Model]] expose reasoning, generation, action-conditioned forward dynamics, inverse dynamics, and policy modes behind one interface, but still require embodiment-specific action contracts for robot control.
 
 The open research question is whether DreamZero-style imagined futures can be made useful for planning without a clean action-conditioned simulator interface.
 
@@ -69,6 +71,11 @@ GE-Sim:
 Cosmos Policy:
   observation + candidate action -> future state -> value
   best-of-N planning interface
+
+Cosmos 3:
+  policy: image + instruction + embodiment config -> action chunk + rollout video
+  inverse dynamics: video + instruction + embodiment config -> inferred action chunk
+  forward dynamics: image + action chunk + embodiment config -> future video
 ```
 
 Working lesson:
@@ -90,6 +97,11 @@ causal future prediction is also not the same as planning unless futures are sco
 7. Separate three evaluation levels: visual consistency, action/geometry consistency, and semantic substep progress.
 8. Include a Fast-WAM-style ablation: keep action prediction but remove or weaken future-video co-training.
 9. Include a Cosmos-style planning ablation: sample multiple action chunks, predict future/progress, and select by score.
+
+Current concrete experiment note:
+
+- [[Shared Semantic IDM - Prediction Reality Deviation]]
+- [[Phase 3 Clean Rollout Benchmark]]
 
 ## Parked Future Experiments
 

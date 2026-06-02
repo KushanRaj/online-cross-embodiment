@@ -145,6 +145,16 @@ Why this is the right size:
 - It uses the L40 efficiently.
 - It creates a measurable bridge from world-model/reasoning signals to action correction.
 
+The concrete version of this is now [[Shared Semantic IDM - Prediction Reality Deviation]]:
+
+```text
+train one embodiment-specific, model-agnostic IDM
+use decoded world-model futures -> shared semantic encoder -> IDM
+compare action implied by observed future against action implied by predicted future
+```
+
+This follows the reconstruction-vs-semantics paper's IDM probe recipe, but changes the purpose. Their IDM tests which latent space preserves action geometry. Our IDM is a fixed diagnostic instrument for plotting prediction-reality deviation.
+
 ## Can We Train pi0.5 In A VLA-JEPA Style?
 
 Not as full VLA-JEPA. The full recipe trains a VLM, latent world model, and action head with SSV2 + DROID on multi-GPU hardware.

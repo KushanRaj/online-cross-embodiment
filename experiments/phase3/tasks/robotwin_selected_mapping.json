@@ -1,0 +1,617 @@
+{
+  "repo_id": "lerobot/robotwin_unified",
+  "metadata_only_dir": "/home/ubuntu/robotics/data/robotwin/meta_only",
+  "selected_download_dir": "/home/ubuntu/robotics/data/robotwin/selected_phase3",
+  "downloaded_selected_paths": false,
+  "selected_task_count": 13,
+  "selected_total_gib": 22.42286927718669,
+  "selected_file_count": 158,
+  "summary": [
+    {
+      "label": "Grab Roller",
+      "task_strings": 416,
+      "episodes": 534,
+      "data_files": [
+        1
+      ],
+      "video_files": {
+        "cam_high": [
+          30,
+          31,
+          32
+        ],
+        "cam_left_wrist": [
+          16,
+          17
+        ],
+        "cam_right_wrist": [
+          16,
+          17
+        ]
+      },
+      "size_gib": 0.9166015470400453,
+      "sample_tasks": [
+        "Secure the light brown roller on the table using arms.",
+        "Lift the cylindrical roller with tapered ends from the table carefully.",
+        "Reach for the roller with polished surface and hold it firmly"
+      ]
+    },
+    {
+      "label": "Place Empty Cup",
+      "task_strings": 527,
+      "episodes": 550,
+      "data_files": [
+        4
+      ],
+      "video_files": {
+        "cam_high": [
+          112,
+          113,
+          114,
+          115
+        ],
+        "cam_left_wrist": [
+          67,
+          68,
+          69
+        ],
+        "cam_right_wrist": [
+          74,
+          75,
+          76
+        ]
+      },
+      "size_gib": 1.7190697910264134,
+      "sample_tasks": [
+        "Use the arm to slide the smooth blue drinking cup onto the light gray round grainy coaster.",
+        "Use the arm to slide the cup with smooth plastic surface onto the flat surface gray wooden coaster.",
+        "Move the cup with light blue color using the arm onto the round coaster with light streaks."
+      ]
+    },
+    {
+      "label": "Stack Blocks Two",
+      "task_strings": 81,
+      "episodes": 533,
+      "data_files": [
+        6
+      ],
+      "video_files": {
+        "cam_high": [
+          178,
+          179,
+          180,
+          181,
+          182,
+          183
+        ],
+        "cam_left_wrist": [
+          109,
+          110,
+          111,
+          112
+        ],
+        "cam_right_wrist": [
+          116,
+          117,
+          118,
+          119
+        ]
+      },
+      "size_gib": 2.4965923642739654,
+      "sample_tasks": [
+        "Set red block at the center, then stack green block over red block after placing it alongside.",
+        "Set red block and green block at the table's center, then stack green block on red block.",
+        "Use the right arm to move red block, then the left arm to stack green block on red block at the center."
+      ]
+    },
+    {
+      "label": "Click Alarmclock",
+      "task_strings": 279,
+      "episodes": 327,
+      "data_files": [
+        0
+      ],
+      "video_files": {
+        "cam_high": [
+          22,
+          23,
+          24
+        ],
+        "cam_left_wrist": [
+          12,
+          13
+        ],
+        "cam_right_wrist": [
+          12,
+          13
+        ]
+      },
+      "size_gib": 0.9307671058923006,
+      "sample_tasks": [
+        "Push the central button on the digital screen alarm-clock's top side.",
+        "Push the top button on the white-faced alarm clock",
+        "Use the right arm to press the rectangular alarm-clock button"
+      ]
+    },
+    {
+      "label": "Hanging Mug",
+      "task_strings": 541,
+      "episodes": 545,
+      "data_files": [
+        1
+      ],
+      "video_files": {
+        "cam_high": [
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47
+        ],
+        "cam_left_wrist": [
+          23,
+          24,
+          25,
+          26,
+          27
+        ],
+        "cam_right_wrist": [
+          23,
+          24,
+          25,
+          26
+        ]
+      },
+      "size_gib": 2.41009234637022,
+      "sample_tasks": [
+        "Use the right arm to lift the drinking mug, rotate it, and attach it to the angular rack with slanted support rod after setting it down.",
+        "Grab the printed white ceramic mug, turn it around, put it back, then attach it to the rack with two rods sticking out.",
+        "Use one arm to grab the ceramic mug smooth outside, turn it, set it centrally, and use the other to hang it onto the metallic angular rack with rod pair."
+      ]
+    },
+    {
+      "label": "Open Microwave",
+      "task_strings": 362,
+      "episodes": 505,
+      "data_files": [
+        2
+      ],
+      "video_files": {
+        "cam_high": [
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72
+        ],
+        "cam_left_wrist": [
+          39,
+          40,
+          41,
+          42,
+          43
+        ],
+        "cam_right_wrist": [
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45
+        ]
+      },
+      "size_gib": 3.6506577152758837,
+      "sample_tasks": [
+        "Use the left arm to grab and pull the gray microwave with two control knobs.",
+        "Pull the handle to open the yellow-sided microwave.",
+        "Handle the medium microwave with slanted sides and open it with the left arm."
+      ]
+    },
+    {
+      "label": "Turn Switch",
+      "task_strings": 395,
+      "episodes": 408,
+      "data_files": [
+        7
+      ],
+      "video_files": {
+        "cam_high": [
+          200,
+          201,
+          202
+        ],
+        "cam_left_wrist": [
+          122,
+          123
+        ],
+        "cam_right_wrist": [
+          128,
+          129
+        ]
+      },
+      "size_gib": 0.8020574888214469,
+      "sample_tasks": [
+        "Engage the hand-sized switch tan smooth finish using the left arm",
+        "Activate the metal-pronged black switch via the left arm",
+        "Engage the black switch with a press."
+      ]
+    },
+    {
+      "label": "Place Can Basket",
+      "task_strings": 532,
+      "episodes": 536,
+      "data_files": [
+        3
+      ],
+      "video_files": {
+        "cam_high": [
+          95,
+          96,
+          97,
+          98,
+          99,
+          100
+        ],
+        "cam_left_wrist": [
+          57,
+          58,
+          59,
+          60
+        ],
+        "cam_right_wrist": [
+          62,
+          63,
+          64,
+          65
+        ]
+      },
+      "size_gib": 2.1767473006621003,
+      "sample_tasks": [
+        "Pick up the can with gold top lid, set it inside the basket with perforated sides, then lift the basket with perforated sides.",
+        "Place the red and white beverage can in the wooden basket with curved handle and then lift the wooden basket with curved handle.",
+        "Use the right arm to pick the soda can with lime illustration, place it inside the oval-shaped basket with woven body, then lift the oval-shaped basket with woven body."
+      ]
+    },
+    {
+      "label": "Move Stapler Pad",
+      "task_strings": 532,
+      "episodes": 541,
+      "data_files": [
+        2,
+        4
+      ],
+      "video_files": {
+        "cam_high": [
+          57,
+          58,
+          59,
+          60,
+          126,
+          127,
+          129
+        ],
+        "cam_left_wrist": [
+          34,
+          35,
+          36,
+          76,
+          77,
+          78
+        ],
+        "cam_right_wrist": [
+          34,
+          35,
+          36,
+          83,
+          84,
+          85
+        ]
+      },
+      "size_gib": 2.5859517250210047,
+      "sample_tasks": [
+        "Use the left arm to place the black stapler with smooth finish onto the Gray mat",
+        "Grab the metallic stapler with blue cover using the right arm and set it on Magenta mat.",
+        "Place the plastic blue stapler with metal parts onto the Magenta colored mat."
+      ]
+    },
+    {
+      "label": "Press Stapler",
+      "task_strings": 518,
+      "episodes": 549,
+      "data_files": [
+        5
+      ],
+      "video_files": {
+        "cam_high": [
+          138,
+          139,
+          140
+        ],
+        "cam_left_wrist": [
+          84,
+          85,
+          86
+        ],
+        "cam_right_wrist": [
+          91,
+          92,
+          93
+        ]
+      },
+      "size_gib": 1.4413790917024016,
+      "sample_tasks": [
+        "Press the plastic stapler with metal on base to staple the sheets together.",
+        "Push down on the stapler the plastic stapler with silver mechanism.",
+        "Push the stapler the modern design stapler with the right arm."
+      ]
+    },
+    {
+      "label": "Handover Mic",
+      "task_strings": 463,
+      "episodes": 538,
+      "data_files": [
+        1
+      ],
+      "video_files": {
+        "cam_high": [
+          37,
+          38,
+          39,
+          40,
+          41
+        ],
+        "cam_left_wrist": [
+          20,
+          21,
+          22
+        ],
+        "cam_right_wrist": [
+          20,
+          21,
+          22
+        ]
+      },
+      "size_gib": 1.6291594738140702,
+      "sample_tasks": [
+        "Use the left arm to grab the microphone with rounded mesh head and transfer it to the right arm.",
+        "Pick up the microphone for recording sound and move it to the opposite side",
+        "Use one hand to grab the teal microphone and pass it."
+      ]
+    },
+    {
+      "label": "Lift Pot",
+      "task_strings": 288,
+      "episodes": 447,
+      "data_files": [
+        1
+      ],
+      "video_files": {
+        "cam_high": [
+          47,
+          48,
+          49,
+          50,
+          51
+        ],
+        "cam_left_wrist": [
+          27,
+          28,
+          29,
+          30
+        ],
+        "cam_right_wrist": [
+          26,
+          27,
+          28,
+          29,
+          30
+        ]
+      },
+      "size_gib": 2.1118612959980965,
+      "sample_tasks": [
+        "Lift the smooth gray kitchenpot upwards with care",
+        "Lift the metal kitchenpot up using your arms",
+        "Hold the kitchenpot with smooth exterior firmly, then lift."
+      ]
+    },
+    {
+      "label": "Move Can Pot",
+      "task_strings": 438,
+      "episodes": 438,
+      "data_files": [
+        1
+      ],
+      "video_files": {
+        "cam_high": [
+          49,
+          50,
+          51,
+          52
+        ],
+        "cam_left_wrist": [
+          28,
+          29,
+          30
+        ],
+        "cam_right_wrist": [
+          28,
+          29,
+          30
+        ]
+      },
+      "size_gib": 1.552874899469316,
+      "sample_tasks": [
+        "Use the right arm to grab the yellow label sauce can and move it next to the medium silver pot for cooking",
+        "Grab the red and orange sauce can with the left arm and move it close to the rounded silver pot with handles",
+        "Use the right arm to pick the cylindrical sauce can up and set it beside the black kitchenpot with silver and black handles"
+      ]
+    }
+  ],
+  "selected_paths": [
+    "data/chunk-000/file-000.parquet",
+    "data/chunk-000/file-001.parquet",
+    "data/chunk-000/file-002.parquet",
+    "data/chunk-000/file-003.parquet",
+    "data/chunk-000/file-004.parquet",
+    "data/chunk-000/file-005.parquet",
+    "data/chunk-000/file-006.parquet",
+    "data/chunk-000/file-007.parquet",
+    "meta/episodes/chunk-000/file-000.parquet",
+    "meta/info.json",
+    "meta/stats.json",
+    "meta/tasks.parquet",
+    "videos/observation.images.cam_high/chunk-000/file-022.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-023.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-024.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-030.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-031.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-032.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-037.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-038.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-039.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-040.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-041.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-042.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-043.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-044.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-045.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-046.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-047.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-048.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-049.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-050.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-051.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-052.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-057.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-058.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-059.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-060.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-064.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-065.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-066.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-067.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-068.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-069.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-070.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-071.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-072.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-095.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-096.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-097.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-098.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-099.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-100.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-112.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-113.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-114.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-115.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-126.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-127.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-129.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-138.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-139.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-140.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-178.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-179.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-180.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-181.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-182.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-183.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-200.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-201.mp4",
+    "videos/observation.images.cam_high/chunk-000/file-202.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-012.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-013.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-016.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-017.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-020.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-021.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-022.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-023.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-024.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-025.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-026.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-027.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-028.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-029.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-030.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-034.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-035.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-036.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-039.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-040.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-041.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-042.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-043.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-057.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-058.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-059.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-060.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-067.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-068.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-069.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-076.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-077.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-078.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-084.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-085.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-086.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-109.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-110.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-111.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-112.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-122.mp4",
+    "videos/observation.images.cam_left_wrist/chunk-000/file-123.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-012.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-013.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-016.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-017.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-020.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-021.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-022.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-023.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-024.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-025.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-026.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-027.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-028.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-029.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-030.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-034.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-035.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-036.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-039.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-040.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-041.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-042.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-043.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-044.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-045.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-062.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-063.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-064.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-065.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-074.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-075.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-076.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-083.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-084.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-085.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-091.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-092.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-093.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-116.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-117.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-118.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-119.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-128.mp4",
+    "videos/observation.images.cam_right_wrist/chunk-000/file-129.mp4"
+  ]
+}

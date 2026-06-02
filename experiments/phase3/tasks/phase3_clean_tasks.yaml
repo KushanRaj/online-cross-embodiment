@@ -1,0 +1,179 @@
+version: 1
+name: phase3_clean_rollout_deviation_tasks
+updated: "2026-06-02"
+purpose: >
+  Clean task set for evaluating predicted future vs observed future deviation
+  across runnable world-action model stacks.
+
+tracks:
+  common_libero_10:
+    environment: LIBERO
+    benchmark: LIBERO-10
+    evidence:
+      - "Cosmos Policy reports LIBERO Long 97.6 SR, suite aggregate."
+      - "Fast-WAM reports LIBERO Long 95.2 SR, suite aggregate."
+      - "GE-Act reports clean LIBERO original 94.4 SR in robustness table."
+      - "No paper captured per-task clean LIBERO failures for Cosmos/Fast-WAM/GE."
+    expected_use: "Shared sanity benchmark; high alignment expected; not failure-rich."
+    tasks:
+      - turn_on_the_stove_and_put_the_moka_pot_on_it
+      - put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it
+      - put_the_yellow_and_white_mug_in_the_microwave_and_close_it
+      - put_both_moka_pots_on_the_stove
+      - put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket
+      - put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket
+      - put_both_the_cream_cheese_box_and_the_butter_in_the_basket
+      - put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate
+      - put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate
+      - pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy
+
+  cosmos_robocasa:
+    environment: RoboCasa
+    model_scope: Cosmos Policy
+    evidence:
+      - "Cosmos Policy reports RoboCasa 67.1 average success over 24 kitchen tasks."
+      - "Cosmos paper does not report per-task RoboCasa policy success."
+      - "Task-family counts below are official RoboCasa-Cosmos dataset replay success counts, not Cosmos per-task policy scores."
+    expected_use: "Cosmos-native clean success/moderate/failure spread."
+    harder_families:
+      - task_family: TurnOffStove
+        replay_success: "39/54"
+        replay_success_rate: 0.722
+        expected_alignment: low_to_moderate
+      - task_family: TurnOnSinkFaucet
+        replay_success: "40/54"
+        replay_success_rate: 0.741
+        expected_alignment: low_to_moderate
+      - task_family: CoffeeSetupMug
+        replay_success: "43/54"
+        replay_success_rate: 0.796
+        expected_alignment: moderate
+      - task_family: TurnOnStove
+        replay_success: "44/53"
+        replay_success_rate: 0.830
+        expected_alignment: moderate
+      - task_family: CloseDoubleDoor
+        replay_success: "47/54"
+        replay_success_rate: 0.870
+        expected_alignment: moderate
+    easy_controls:
+      - task_family: CloseDrawer
+        replay_success: "54/54"
+        expected_alignment: high
+      - task_family: CloseSingleDoor
+        replay_success: "54/54"
+        expected_alignment: high
+      - task_family: CoffeePressButton
+        replay_success: "54/54"
+        expected_alignment: high
+      - task_family: OpenDrawer
+        replay_success: "54/54"
+        expected_alignment: high
+      - task_family: TurnSinkSpout
+        replay_success: "54/54"
+        expected_alignment: high
+
+  fastwam_robotwin:
+    environment: RoboTwin 2.0
+    model_scope: "Fast-WAM, Fast-WAM-Joint, Fast-WAM-IDM, LingBot-VA"
+    evidence:
+      - "Fast-WAM appendix reports exact per-task clean/randomized RoboTwin scores."
+      - "LingBot appendix reports overlapping per-task RoboTwin scores."
+    expected_use: "Best clean task-level success/moderate/failure source for Fast-WAM-family models."
+    high_alignment_controls:
+      - task: Grab Roller
+        fastwam_clean_randomized: "100/100"
+        expected_alignment: high
+      - task: Place Empty Cup
+        fastwam_clean_randomized: "100/100"
+        expected_alignment: high
+      - task: Stack Blocks Two
+        fastwam_clean_randomized: "100/100"
+        expected_alignment: high
+      - task: Click Alarmclock
+        fastwam_clean_randomized: "100/100"
+        expected_alignment: high
+    hard_or_moderate:
+      - task: Hanging Mug
+        fastwam_clean_randomized: "58/62"
+        lingbot_clean_randomized: "40/28"
+        expected_alignment: low
+      - task: Open Microwave
+        fastwam_clean_randomized: "62/45"
+        fastwam_joint_clean_randomized: "3/14"
+        fastwam_idm_clean_randomized: "54/53"
+        lingbot_clean_randomized: "82/86"
+        expected_alignment: disagreement
+      - task: Turn Switch
+        fastwam_clean_randomized: "61/59"
+        lingbot_clean_randomized: "44/45"
+        expected_alignment: low_to_moderate
+      - task: Place Can Basket
+        fastwam_clean_randomized: "71/69"
+        fastwam_joint_clean_randomized: "50/23"
+        fastwam_idm_clean_randomized: "37/28"
+        lingbot_clean_randomized: "81/84"
+        expected_alignment: disagreement
+      - task: Move Stapler Pad
+        fastwam_clean_randomized: "77/64"
+        expected_alignment: moderate
+      - task: Press Stapler
+        fastwam_clean_randomized: "90/97"
+        fastwam_joint_clean_randomized: "52/50"
+        fastwam_idm_clean_randomized: "50/57"
+        lingbot_clean_randomized: "85/82"
+        expected_alignment: disagreement
+
+  ge_robotwin_overlap:
+    environment: RoboTwin 2.0
+    model_scope: GE-Act
+    evidence:
+      - "GE paper names four RoboTwin tasks and reports figure-only bars."
+      - "GE paper says GE-Act beats baselines on 3/4 RoboTwin tasks and is slightly behind on Lift Pot."
+    expected_use: "GE/Fast-WAM overlap if GE RoboTwin rollout assets are available."
+    tasks:
+      - task: Grab Roller
+        ge_result: "visually near 0.98 SR"
+        expected_alignment: high
+      - task: Handover Mic
+        ge_result: "visually near 1.0 SR"
+        expected_alignment: high
+      - task: Lift Pot
+        ge_result: "visually around 0.77 SR; paper says slightly behind VLA methods"
+        expected_alignment: moderate
+      - task: Move Can Pot
+        ge_result: "visually around 0.85 SR"
+        expected_alignment: moderate
+
+  ge_native_named:
+    environment: AgiBot / GE-native
+    model_scope: GE-Act
+    evidence:
+      - "GE paper gives named clean tasks, mostly as image-only bars."
+      - "Immediate usability depends on released GE/AgiBot rollout assets."
+    tasks:
+      - task: Clean the table
+        expected_alignment: high
+      - task: Make a sandwich
+        expected_alignment: moderate
+      - task: Pour a cup of tea
+        expected_alignment: moderate
+      - task: Heat food in microwave
+        expected_alignment: moderate
+      - task: Packing detergent from conveyor
+        expected_alignment: moderate_dynamic
+      - task: Grasp red cylinder from table and place into paper cup
+        ge_exact_result: "0.89 E2E / 0.76 SR with GE-Base init + VidAda + state"
+        expected_alignment: moderate
+
+  robolab_probe:
+    environment: RoboLab
+    model_scope: "future optional Isaac Lab / Isaac Sim stress track"
+    evidence:
+      - "RoboLab is cloned on EC2 as a later environment probe; no policy scores are recorded yet."
+      - "This track is not part of the first clean common benchmark until a runnable model/environment pairing is chosen."
+    expected_use: "Later stress-testing task source if we want an Isaac Lab-native substitute or extension."
+    selected_manifest: "/home/ubuntu/robotics/data/robolab/phase3_selected_tasks.txt"
+    tasks:
+      - BananaInBowlTask
+      - RubiksCubeAndBananaTask

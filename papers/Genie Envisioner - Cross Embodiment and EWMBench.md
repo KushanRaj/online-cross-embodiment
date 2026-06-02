@@ -125,6 +125,160 @@ Important nuance:
 
 GE-Act does not prove that one action head transfers directly across embodiments. Their own cross-embodiment setup adapts the video/world component and trains a new action decoder for the new robot. This strengthens the framing that the world/reasoning representation may transfer better than the action translation layer.
 
+## GE-Act vs GE-Base vs GE-Sim For Our IDM Data
+
+This paper is clear that the three GE modules should not be collapsed into one interface:
+
+```text
+GE-Base:
+  observation + instruction -> future video
+
+GE-Act:
+  observation + instruction -> action trajectory
+  action decoder attends to GE-Base visual latent features
+
+GE-Sim:
+  observation + instruction + proposed action trajectory -> future video
+```
+
+This matters for our real-to-model data collection.
+
+GE-Act is not primarily presented as the future-video generator. During GE-Act action pretraining, the paper says the world model is initialized from GE-Base-LF, the GE-Base parameters are fixed, only the action decoder is updated, and video generation is disabled to reduce compute. It uses four low-frequency visual memory frames sampled at 5 Hz as conditioning and predicts 54 high-frequency action steps at 30 Hz, supervised by ground-truth action trajectories. At deployment, GE-Act caches visual latent tokens from a single video-DiT pass and reuses them while the action model denoises action tokens.
+
+So:
+
+```text
+GE-Act paper-intended output:
+  action chunk
+
+GE-Act internal support:
+  visual latent features from GE-Base-LF
+
+GE-Act released-pipeline diagnostic:
+  may decode a video branch if return_video=True
+```
+
+Our smoke test confirms the released pipeline can return both an action and a decoded video tensor when `return_action=True` and `return_video=True`. That is useful diagnostically, but it is not the cleanest paper-intended source of action-conditioned future pixels. If the decoded video from the GE-Act checkpoint is noisy, that is consistent with the paper's action-training setup where video generation is disabled on the action-pretraining path. It is not by itself proof that the GE visual model is poor.
+
+For the IDM experiment, the clean collection plan is:
+
+1. **GE-Act action only**
+   Use GE-Act for `C -> a_model`.
+
+2. **GE-Base future**
+   Use GE-Base for `C -> P_model` when we want instruction-conditioned prediction honesty without action intervention.
+
+3. **GE-Sim future**
+   Use GE-Sim for `C, a_model -> P_model` when we want the action-conditioned analogue of Cosmos-style real-to-model pairs.
+
+4. **GE-Act return_video smoke**
+   Keep this as a diagnostic branch because the code can emit it, but do not treat it as the main GE action-conditioned simulator unless quality is empirically acceptable.
+
+The consequence for IDM horizons is also important. The IDM horizon must match the future frame actually produced by the model. If Cosmos gives us a 16-step future, then the matching supervised target is `IDM_k16`, not `IDM_k1`. If the released GE LIBERO config gives a 36-step action chunk and a 13-frame decoded video, we need to explicitly record which decoded frame is being used and train/evaluate an IDM at that effective horizon.
+
+## GE Checkpoint Lineage Caveat
+
+The released checkpoint we downloaded for video probing is:
+
+```text
+GE_base_fast_v0.1.safetensors
+```
+
+The repo describes this as **GE-Base-fast**, a low-frequency video generation model optimized for low-latency use. It uses the LTX-Video VAE/tokenizer/text-encoder bundle separately; the safetensors file itself stores the video DiT / transformer weights, not the VAE decoder.
+
+The paper's disclosed GE-Base training recipe is:
+
+```text
+base data:
+  AgiBot-World-Beta
+  ~1M real-world dual-arm teleoperation episodes
+  2,967 hours
+  language instructions
+  multi-view visual observations
+  structured action policies
+
+Stage I / GE-Base-MR:
+  57-frame video sequences
+  sampled between 3 Hz and 30 Hz
+  4 sparse memory frames
+  encoded to 8 latent frames
+  denoising objective
+  32 A100 GPUs for ~7 days
+
+Stage II / GE-Base-LF:
+  fine-tune GE-Base-MR
+  9-frame clips at 5 Hz
+  4 sparse memory frames
+  compact latent space of 2 latent frames
+  frozen pretrained video encoder/decoder
+  update video generation components
+  32 A100 GPUs for ~3 days
+```
+
+The released `ge_act_libero_spatial.safetensors` checkpoint is different:
+
+```text
+ge_act_libero_spatial.safetensors:
+  action_expert=True
+  contains all visual/video transformer keys
+  also contains action-block keys
+  repo config identifies it as a LIBERO-trained GE-Act checkpoint
+```
+
+The paper's generic GE-Act training recipe is:
+
+```text
+GE-Act action pretraining:
+  initialize world model from GE-Base-LF
+  freeze GE-Base-LF parameters
+  train only the action decoder
+  video generation disabled
+  data: AgiBot-World-Beta text-video-policy triplets
+  target: ground-truth action trajectories
+  4 visual memory frames at 5 Hz
+  54 action steps at 30 Hz
+  16 A100 GPUs for ~3 days
+
+task-specific video adaptation:
+  update video generation components
+  data: full AgiBot-World corpus + task-specific subset upweighted 10x
+  8 A100 GPUs for ~12 hours
+
+task-specific action specialization:
+  fine-tune full model, including GE-Base backbone and action module
+  data: task-specific trajectories
+  8 A100 GPUs for ~36 hours
+```
+
+What is **not fully disclosed** in the repo/model card is the exact lineage of the released `ge_act_libero_spatial.safetensors`: how much LIBERO data, whether it used only LIBERO task-specific adaptation, and exactly which GE-Base checkpoint it started from. The repo training instructions point to LIBERO data from `openvla/modified_libero_rlds` converted to LeRobot format, and the released config names it as a checkpoint trained on LIBERO.
+
+Our empirical checkpoint comparison adds:
+
+```text
+GE_base_fast_v0.1:
+  718 transformer keys
+  0 action keys
+
+ge_act_libero_spatial:
+  1429 transformer/action keys
+  718 visual/video keys
+  711 action keys
+
+all 718 common visual/video keys differ from GE_base_fast_v0.1
+```
+
+So for our purposes:
+
+```text
+GE_base_fast_v0.1:
+  paper/repo-intended video world model
+
+visual path inside ge_act_libero_spatial:
+  GE-Base-derived, LIBERO/action-adapted visual backbone
+  not identical to downloaded GE_base_fast_v0.1
+  exact released-checkpoint lineage not fully documented
+```
+
 ## GE-Sim Design
 
 GE-Sim turns the video world model into an action-conditioned neural simulator.

@@ -15,6 +15,22 @@
 !docs/
 !docs/**
 
+!experiments/
+!experiments/**
+experiments/**/__pycache__/
+experiments/**/*.pyc
+
+!scripts/
+!scripts/**
+
+!vm-patches/
+!vm-patches/**
+vm-patches/**/__pycache__/
+vm-patches/**/*.pyc
+
+!setup-*.sh
+!download-all-checkpoints.sh
+
 !pdfs/
 !pdfs/*.pdf
 
