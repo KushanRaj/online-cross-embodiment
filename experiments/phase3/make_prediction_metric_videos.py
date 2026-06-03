@@ -78,7 +78,7 @@ def _task_id(path: Path) -> int:
 def _plot_frame(rows: list[dict[str, str]], active: int, width: int, height: int) -> Image.Image:
     metrics = [
         ("idm_model_vs_selected_step_l2", "|| IDM(C,P) - a ||"),
-        ("idm_model_vs_selected_step_cos_dist", "Mean per-step cosine distance: IDM(C,P) vs a"),
+        ("idm_model_vs_selected_eef_step_cos_dist", "Mean per-step EEF cosine distance: IDM(C,P) vs a"),
         ("idm_model_vs_selected_gripper_mismatch_rate", "Gripper mismatch rate"),
     ]
     xs = np.asarray([_float(r, "query_t") for r in rows], dtype=np.float32)
