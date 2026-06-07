@@ -11,6 +11,7 @@ The main thesis we are tracking:
 
 ## Where Things Live
 
+- `index.html`, `about.html`, `blog/`, `posts/`, `assets/` - the public GitHub Pages site and blog skeleton.
 - `Robotics World Models.md` - the top-level map of content.
 - `papers/` - paper-level notes plus the paper catalog.
 - `pdfs/` - local paper PDFs.
@@ -30,3 +31,7 @@ The immediate experiment family is not "train the biggest VLA." It is:
 5. Test whether an inverse-dynamics-style residual model can map "predicted future vs actual future" into an actionable correction signal.
 
 DreamZero is useful because it jointly predicts action and future. GE-Sim / Cosmos-style action-conditioned simulators are cleaner for causal counterfactuals. Pi/Molmo-style VLAs are useful for instruction sensitivity and action-token/action-expert comparisons.
+
+## GitHub Pages
+
+The site is plain static HTML/CSS for now. In GitHub, enable Pages from the `main` branch root to publish it. The blog is intentionally flat until the writing structure becomes clearer.

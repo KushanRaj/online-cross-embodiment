@@ -70,7 +70,9 @@ def main() -> None:
     parser.add_argument("--encoder", default="google/siglip-base-patch16-224")
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--shuffle-before-limit", action="store_true")
     parser.add_argument("--horizon", type=int, default=None, help="Keep only rows with this horizon_k")
+    parser.add_argument("--horizons", default=None, help="Comma-separated horizon_k values to keep")
     parser.add_argument("--source-type", default=None, help="Keep only rows with this source_type")
     parser.add_argument("--val-fraction", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=195)
@@ -79,8 +81,14 @@ def main() -> None:
     rows = read_manifest(args.manifest)
     if args.horizon is not None:
         rows = [row for row in rows if row.horizon_k == args.horizon]
+    if args.horizons is not None:
+        keep = {int(x.strip()) for x in args.horizons.split(",") if x.strip()}
+        rows = [row for row in rows if row.horizon_k in keep]
     if args.source_type is not None:
         rows = [row for row in rows if row.source_type == args.source_type]
+    if args.shuffle_before_limit:
+        rng = random.Random(args.seed)
+        rng.shuffle(rows)
     if args.limit is not None:
         rows = rows[: args.limit]
     if not rows:

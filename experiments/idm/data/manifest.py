@@ -109,6 +109,9 @@ class CachedFeatureDataset:
         self.z_future = cache["z_future"][split_indices].float()
         self.proprio = cache["proprio"][split_indices].float()
         self.actions = cache["actions"][split_indices].float()
+        self.horizon_k = cache.get("horizon_k")
+        if self.horizon_k is not None:
+            self.horizon_k = self.horizon_k[split_indices].long()
         self.sample_ids = [cache["sample_ids"][int(i)] for i in split_indices]
         rows_raw = cache.get("rows_raw")
         self.rows_raw = [rows_raw[int(i)] for i in split_indices] if rows_raw is not None else None
@@ -122,6 +125,7 @@ class CachedFeatureDataset:
             "z_future": self.z_future[idx],
             "proprio": self.proprio[idx],
             "action": self.actions[idx],
+            "horizon_k": self.horizon_k[idx] if self.horizon_k is not None else 0,
             "sample_id": self.sample_ids[idx],
         }
 

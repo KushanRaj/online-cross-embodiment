@@ -5,6 +5,17 @@
 !README.md
 !OBSIDIAN.md
 !Robotics World Models.md
+!index.html
+!about.html
+
+!assets/
+!assets/**
+
+!blog/
+!blog/**
+
+!posts/
+!posts/**
 
 !papers/
 !papers/*.md

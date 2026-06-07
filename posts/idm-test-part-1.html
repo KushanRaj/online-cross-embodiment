@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IDM Test Part 1 · Kushan Raj</title>
+    <meta name="description" content="Draft skeleton for IDM Test Part 1.">
+    <link rel="stylesheet" href="../assets/css/site.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="portrait">photo<br>soon</div>
+        <p class="name">Kushan Raj</p>
+        <p class="side-note">draft report<br>world models / idm</p>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="../index.html">about</a>
+          <a href="../blog/index.html">blog</a>
+          <a href="idm-test-part-1.html" aria-current="page">idm test</a>
+        </nav>
+      </aside>
+
+      <article class="content post-content">
+        <p class="kicker">draft report</p>
+        <h1>IDM Test Part 1: Can world-model prediction error become an RL signal?</h1>
+        <span class="meta">TBD · inverse dynamics · Cosmos · LIBERO</span>
+
+        <p class="callout">
+          This is a scaffold. Replace this with the actual report once the figures,
+          videos, and claims are ready.
+        </p>
+
+        <h2>Motivation</h2>
+        <p>
+          RL-style adaptation usually asks for a lot of expert data or reward engineering.
+          The question here is whether the model's own predicted future can provide an
+          alternate signal.
+        </p>
+
+        <h2>Hypothesis</h2>
+        <p>
+          If a policy action implies one future, but the world model predicts or observes
+          a different future, the inverse-dynamics disagreement may reveal task failure,
+          correction pressure, or context misalignment.
+        </p>
+
+        <h2>Setup</h2>
+        <p>
+          Cosmos policy rollouts on LIBERO-10. An inverse dynamics model predicts action
+          chunks from current and future frames. During rollout, compare the policy action
+          against the action implied by the predicted future.
+        </p>
+
+        <h2>What We Measured</h2>
+        <p>
+          IDM(C, P) versus the policy action, per-step cosine distance, EEF mismatch,
+          gripper mismatch, and success/failure splits.
+        </p>
+
+        <h2>Early Observations</h2>
+        <p>
+          Fill in the sharp cases: where the world model future is task-misaligned,
+          where gripper/contact spikes dominate, and where the signal separates failures.
+        </p>
+
+        <h2>Open Questions</h2>
+        <p>
+          Does the signal survive better world models? Does it work under OOD futures?
+          How much generated-future data does the IDM need? Can this become correction,
+          not only diagnosis?
+        </p>
+        <footer class="foot"><a href="../blog/index.html">back to blog</a></footer>
+      </article>
+    </main>
+  </body>
+</html>
