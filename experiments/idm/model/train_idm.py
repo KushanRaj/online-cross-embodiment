@@ -432,10 +432,10 @@ def main() -> None:
             },
             out_dir / "last.pt",
         )
+        history_path.write_text(json.dumps(history, indent=2) + "\n")
         if stop_training:
             break
 
-    history_path.write_text(json.dumps(history, indent=2) + "\n")
     if wandb_run is not None:
         wandb_run.finish()
 
