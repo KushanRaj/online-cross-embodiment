@@ -101,6 +101,7 @@ def _episode_rows(
     h5_path: Path,
     idm: ImageIDMAdapter,
     batch_size: int,
+    reference_action_dataset: str,
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     with h5py.File(h5_path, "r") as h5:
@@ -109,7 +110,9 @@ def _episode_rows(
         query_future = _read_image_stack(h5, "query_future_primary_images")
         query_t = _read_array(h5, "query_t")
         query_proprio = _read_array(h5, "query_proprio")
-        query_actions = _read_array(h5, "query_action_chunks")
+        query_actions = _read_array(h5, reference_action_dataset)
+        if query_actions is None:
+            query_actions = _read_array(h5, "query_action_chunks")
         query_values = _read_array(h5, "query_values")
         executed_actions = _read_array(h5, "actions")
         if primary is None or query_primary is None or query_future is None:
@@ -271,6 +274,7 @@ def main() -> None:
     parser.add_argument("--out-dir", required=True)
     parser.add_argument("--encoder", default="google/siglip-base-patch16-224")
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--reference-action-dataset", default="query_action_chunks")
     args = parser.parse_args()
 
     files: list[Path] = []
@@ -291,7 +295,7 @@ def main() -> None:
 
     rows: list[dict[str, Any]] = []
     for h5_path in files:
-        rows.extend(_episode_rows(h5_path, idm, args.batch_size))
+        rows.extend(_episode_rows(h5_path, idm, args.batch_size, args.reference_action_dataset))
     if not rows:
         raise SystemExit("No valid query rows found. Check data_collection=True and future predictions in rollout HDF5.")
 
@@ -303,6 +307,7 @@ def main() -> None:
             "checkpoint": str(Path(args.checkpoint).expanduser()),
             "idm_type": idm.model_type,
             "encoder": args.encoder,
+            "reference_action_dataset": args.reference_action_dataset,
             "horizon_note": "Observed future is primary_images[query_t + horizon_k]; Cosmos predicted future is query_future_primary_images at the same model-query point.",
             "patch_idm_adapter_note": idm.adapter_note,
             "preprocessing_note": "Online rollout HDF5 stores the already prepared Cosmos LIBERO frames; no additional flip is applied.",
