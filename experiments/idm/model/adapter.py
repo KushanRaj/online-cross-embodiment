@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
-from transformers import AutoModel, AutoProcessor
+from transformers import AutoImageProcessor, AutoModel
 
 from experiments.idm.model.idm import FeatureIDM, PatchTransformerIDM
 
@@ -42,7 +42,7 @@ class ImageIDMAdapter:
             ).to(device)
         self.model.load_state_dict(checkpoint["model_state"])
         self.model.eval()
-        self.processor = AutoProcessor.from_pretrained(encoder_name)
+        self.processor = AutoImageProcessor.from_pretrained(encoder_name)
         self.encoder = AutoModel.from_pretrained(encoder_name).to(device).eval()
 
     @property
