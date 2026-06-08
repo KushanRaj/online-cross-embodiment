@@ -794,3 +794,41 @@ Do prompt/task perturbations increase mismatch before visible failure?
 ```
 
 This is the concrete bridge from the current Cosmos-policy experiments to π0.5 and Molmo.
+
+### LIBERO Policy Chunk Contract
+
+For π0.5 and Molmo, do not force a native 16-step policy rollout. Use their chunked-policy behavior and aggregate two committed prefixes into one Cosmos-aligned 16-step comparison.
+
+Rollout contract:
+
+```text
+At t:
+  query Cosmos once -> P16
+  query policy -> 10 actions
+  execute first 8 actions
+
+At t + 8:
+  query policy again -> 10 actions
+  execute first 8 actions
+
+Now define:
+  a_policy_16 = first 8 from policy query 1 + first 8 from policy query 2
+
+Metric:
+  compare IDM(C_t, P16) vs a_policy_16
+```
+
+Then repeat:
+
+```text
+At t + 16:
+  query Cosmos again -> next P16
+  query policy -> next 10 actions
+  execute first 8
+  query policy again
+  execute first 8
+```
+
+This gives Cosmos and the IDM their native `k = 16` comparison while keeping π0.5 and Molmo close to their normal receding-horizon control style.
+
+Do not compare Cosmos `P16` against only the first policy action. Do not silently pad π0.5's 10-action chunk to 16. The useful object is the actually executed 16-action policy chunk assembled from two 8-step commitments.

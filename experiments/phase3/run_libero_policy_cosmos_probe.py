@@ -77,7 +77,7 @@ def _write_episode_h5(
 class PolicyAdapter(Protocol):
     name: str
 
-    def predict_chunk(self, obs: dict[str, Any], task_description: str, horizon: int) -> np.ndarray:
+    def predict_chunk(self, obs: dict[str, Any], task_description: str, num_actions: int) -> np.ndarray:
         ...
 
 
@@ -108,7 +108,7 @@ class OpenPIWebsocketPolicy:
             )
         ).astype(np.float32)
 
-    def predict_chunk(self, obs: dict[str, Any], task_description: str, horizon: int) -> np.ndarray:
+    def predict_chunk(self, obs: dict[str, Any], task_description: str, num_actions: int) -> np.ndarray:
         element = {
             "observation/image": self._image(obs["agentview_image"]),
             "observation/wrist_image": self._image(obs["robot0_eye_in_hand_image"]),
@@ -120,9 +120,9 @@ class OpenPIWebsocketPolicy:
             actions = actions[None, :]
         if actions.shape[-1] != 7:
             raise ValueError(f"Expected π0.5 LIBERO 7D actions, got {actions.shape}")
-        if len(actions) < horizon:
-            raise ValueError(f"π0.5 returned {len(actions)} actions, need horizon={horizon}")
-        return actions[:horizon].astype(np.float32)
+        if len(actions) < num_actions:
+            raise ValueError(f"π0.5 returned {len(actions)} actions, need num_actions={num_actions}")
+        return actions[:num_actions].astype(np.float32)
 
 
 class MolmoAct2Policy:
@@ -176,7 +176,7 @@ class MolmoAct2Policy:
             ]
         ).astype(np.float32)
 
-    def predict_chunk(self, obs: dict[str, Any], task_description: str, horizon: int) -> np.ndarray:
+    def predict_chunk(self, obs: dict[str, Any], task_description: str, num_actions: int) -> np.ndarray:
         agent_img = self._pil(obs["agentview_image"])
         wrist_img = self._pil(obs["robot0_eye_in_hand_image"])
         ctx = (
@@ -193,7 +193,7 @@ class MolmoAct2Policy:
                 norm_tag="libero",
                 inference_action_mode="continuous",
                 enable_depth_reasoning=False,
-                num_steps=horizon,
+                num_steps=num_actions,
                 normalize_language=True,
                 enable_cuda_graph=self._enable_cuda_graph,
             )
@@ -207,9 +207,9 @@ class MolmoAct2Policy:
             actions = actions[None, :]
         if actions.shape[-1] != 7:
             raise ValueError(f"Expected MolmoAct2 LIBERO 7D actions, got {actions.shape}")
-        if len(actions) < horizon:
-            raise ValueError(f"MolmoAct2 returned {len(actions)} actions, need horizon={horizon}")
-        return actions[:horizon].astype(np.float32)
+        if len(actions) < num_actions:
+            raise ValueError(f"MolmoAct2 returned {len(actions)} actions, need num_actions={num_actions}")
+        return actions[:num_actions].astype(np.float32)
 
 
 def main() -> None:
@@ -229,6 +229,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=195)
     parser.add_argument("--run-id-note", default="policy-cosmos-probe")
     parser.add_argument("--horizon", type=int, default=16)
+    parser.add_argument("--policy-prediction-steps", type=int, default=10)
+    parser.add_argument("--policy-execute-steps", type=int, default=8)
     parser.add_argument("--resize-size", type=int, default=224)
     parser.add_argument("--env-img-res", type=int, default=256)
     parser.add_argument("--num-denoising-steps-action", type=int, default=5)
@@ -327,8 +329,8 @@ def main() -> None:
         for trial_idx in tqdm(range(args.num_trials_per_task), desc=f"task {task_id}", leave=False):
             env.reset()
             obs = env.set_init_state(initial_states[trial_idx])
-            action_queue: deque[np.ndarray] = deque(maxlen=args.horizon)
-            cosmos_action_queue: deque[np.ndarray] = deque(maxlen=args.horizon)
+            action_queue: deque[np.ndarray] = deque()
+            cosmos_action_queue: deque[np.ndarray] = deque()
             replay_images: list[np.ndarray] = []
             replay_wrist_images: list[np.ndarray] = []
             future_predictions: list[dict[str, np.ndarray]] = []
@@ -346,6 +348,7 @@ def main() -> None:
             query_future_primary: list[np.ndarray] = []
             query_future_wrist: list[np.ndarray] = []
             query_values: list[float] = []
+            pending_probe: dict[str, Any] | None = None
             success = False
             t = 0
             wait_steps = 10
@@ -365,37 +368,68 @@ def main() -> None:
 
                 if not action_queue:
                     query_start = time.time()
-                    cosmos_result = get_action(
-                        cfg,
-                        cosmos_model,
-                        dataset_stats,
-                        observation,
-                        task_description,
-                        seed=cfg.seed,
-                        randomize_seed=False,
-                        num_denoising_steps_action=cfg.num_denoising_steps_action,
-                        generate_future_state_and_value_in_parallel=True,
-                    )
-                    future = cosmos_result["future_image_predictions"]
-                    future_image = future.get("future_image")
-                    if future_image is None:
-                        raise RuntimeError("Cosmos did not return future_image")
+                    if pending_probe is None:
+                        cosmos_result = get_action(
+                            cfg,
+                            cosmos_model,
+                            dataset_stats,
+                            observation,
+                            task_description,
+                            seed=cfg.seed,
+                            randomize_seed=False,
+                            num_denoising_steps_action=cfg.num_denoising_steps_action,
+                            generate_future_state_and_value_in_parallel=True,
+                        )
+                        future = cosmos_result["future_image_predictions"]
+                        future_image = future.get("future_image")
+                        if future_image is None:
+                            raise RuntimeError("Cosmos did not return future_image")
+                        pending_probe = {
+                            "query_t": t - wait_steps,
+                            "query_primary": observation["primary_image"],
+                            "query_wrist": observation["wrist_image"],
+                            "query_proprio": observation["proprio"],
+                            "future": future,
+                            "future_primary": future_image,
+                            "cosmos_chunk": np.asarray(cosmos_result["actions"], dtype=np.float32).reshape(
+                                args.horizon, 7
+                            ),
+                            "value": float(cosmos_result.get("value_prediction", 0.0)),
+                            "policy_parts": [],
+                            "scheduled": 0,
+                        }
+                        future_predictions.append(future)
 
-                    policy_chunk = policy.predict_chunk(obs, task_description, args.horizon)
-                    cosmos_chunk = np.asarray(cosmos_result["actions"], dtype=np.float32).reshape(args.horizon, 7)
-                    action_queue.extend(policy_chunk)
-                    cosmos_action_queue.extend(cosmos_chunk)
-                    future_predictions.append(future)
-                    query_t.append(t - wait_steps)
-                    query_primary.append(observation["primary_image"])
-                    query_wrist.append(observation["wrist_image"])
-                    query_proprio.append(observation["proprio"])
-                    query_policy_chunks.append(policy_chunk.astype(np.float32))
-                    query_cosmos_chunks.append(cosmos_chunk.astype(np.float32))
-                    query_values.append(float(cosmos_result.get("value_prediction", 0.0)))
-                    query_future_primary.append(future_image)
-                    if future.get("future_wrist_image") is not None:
-                        query_future_wrist.append(future["future_wrist_image"])
+                    assert pending_probe is not None
+                    policy_prediction = policy.predict_chunk(obs, task_description, args.policy_prediction_steps)
+                    remaining = args.horizon - int(pending_probe["scheduled"])
+                    execute_count = min(args.policy_execute_steps, remaining, len(policy_prediction))
+                    if execute_count <= 0:
+                        raise RuntimeError("No policy actions available for the current probe window")
+
+                    start = int(pending_probe["scheduled"])
+                    stop = start + execute_count
+                    policy_prefix = policy_prediction[:execute_count].astype(np.float32)
+                    action_queue.extend(policy_prefix)
+                    cosmos_action_queue.extend(pending_probe["cosmos_chunk"][start:stop])
+                    pending_probe["policy_parts"].append(policy_prefix)
+                    pending_probe["scheduled"] = stop
+
+                    if int(pending_probe["scheduled"]) == args.horizon:
+                        policy_chunk = np.concatenate(pending_probe["policy_parts"], axis=0).astype(np.float32)
+                        cosmos_chunk = pending_probe["cosmos_chunk"].astype(np.float32)
+                        query_t.append(int(pending_probe["query_t"]))
+                        query_primary.append(pending_probe["query_primary"])
+                        query_wrist.append(pending_probe["query_wrist"])
+                        query_proprio.append(pending_probe["query_proprio"])
+                        query_policy_chunks.append(policy_chunk)
+                        query_cosmos_chunks.append(cosmos_chunk)
+                        query_values.append(float(pending_probe["value"]))
+                        query_future_primary.append(pending_probe["future_primary"])
+                        future = pending_probe["future"]
+                        if future.get("future_wrist_image") is not None:
+                            query_future_wrist.append(future["future_wrist_image"])
+                        pending_probe = None
                     print(
                         {
                             "policy": policy.name,
@@ -403,11 +437,9 @@ def main() -> None:
                             "trial": trial_idx,
                             "t": t,
                             "query_sec": round(time.time() - query_start, 3),
-                            "policy_l2": float(np.linalg.norm(policy_chunk.reshape(-1))),
-                            "cosmos_l2": float(np.linalg.norm(cosmos_chunk.reshape(-1))),
-                            "policy_cosmos_l2": float(
-                                np.linalg.norm(policy_chunk.reshape(-1) - cosmos_chunk.reshape(-1))
-                            ),
+                            "policy_prediction_steps": int(len(policy_prediction)),
+                            "scheduled_prefix": int(execute_count),
+                            "probe_scheduled": int(stop),
                         },
                         flush=True,
                     )
@@ -494,8 +526,13 @@ def main() -> None:
         "task_ids": task_ids,
         "num_trials_per_task": args.num_trials_per_task,
         "horizon": args.horizon,
+        "policy_prediction_steps": args.policy_prediction_steps,
+        "policy_execute_steps": args.policy_execute_steps,
         "cosmos_ckpt": "nvidia/Cosmos-Policy-LIBERO-Predict2-2B",
-        "note": "query_action_chunks is the executed policy chunk; query_future_primary_images is Cosmos P.",
+        "note": (
+            "query_action_chunks is assembled from two policy prefixes by default: "
+            "policy predicts 10, execute 8, requery, execute 8; query_future_primary_images is Cosmos P16."
+        ),
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     with (out_dir / "episodes.csv").open("w", newline="") as f:
