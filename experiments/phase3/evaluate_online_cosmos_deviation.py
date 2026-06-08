@@ -15,7 +15,7 @@ from PIL import Image
 from tqdm import tqdm
 from transformers import AutoModel, AutoProcessor
 
-from experiments.idm.model.idm import FeatureIDM
+from experiments.idm.model.idm import FeatureIDM, PatchTransformerIDM
 
 
 def _read_image_stack(h5: h5py.File, name: str) -> np.ndarray | None:
@@ -59,6 +59,23 @@ def _encode_batch(model, processor, images: list[Image.Image], device: torch.dev
     else:
         raise RuntimeError("Encoder output has neither pooler_output nor last_hidden_state")
     return torch.nn.functional.normalize(features.float(), dim=-1)
+
+
+def _encode_patch_batch(model, processor, images: list[Image.Image], device: torch.device) -> torch.Tensor:
+    batch = processor(images=images, return_tensors="pt")
+    batch = {key: value.to(device) for key, value in batch.items()}
+    with torch.no_grad():
+        vision_model = getattr(model, "vision_model", model)
+        output = vision_model(**batch)
+    if not hasattr(output, "last_hidden_state"):
+        raise RuntimeError("Patch IDM requires encoder last_hidden_state patch tokens")
+    return output.last_hidden_state.float()
+
+
+def _patch_window(z_current: torch.Tensor, z_future: torch.Tensor, horizon: int) -> torch.Tensor:
+    current = z_current.unsqueeze(1).expand(-1, horizon, -1, -1)
+    future = z_future.unsqueeze(1)
+    return torch.cat([current, future], dim=1)
 
 
 def _norm(x: np.ndarray) -> float:
@@ -117,23 +134,41 @@ def _gripper_flip_count(a: np.ndarray) -> int:
     return int(np.sum(signs[1:] != signs[:-1]))
 
 
-def _load_idm(checkpoint_path: Path, device: torch.device) -> FeatureIDM:
+def _load_idm(checkpoint_path: Path, device: torch.device) -> tuple[torch.nn.Module, str]:
     checkpoint = torch.load(checkpoint_path.expanduser(), map_location="cpu", weights_only=False)
-    model = FeatureIDM(
-        feature_dim=int(checkpoint["feature_dim"]),
-        action_dim=int(checkpoint["action_dim"]),
-        proprio_dim=int(checkpoint["proprio_dim"]),
-        hidden_dim=int(checkpoint["args"]["hidden_dim"]),
-        depth=int(checkpoint["args"]["depth"]),
-    ).to(device)
+    args = checkpoint.get("args", {})
+    model_type = str(args.get("model_type", "feature"))
+    if model_type == "patch":
+        horizon = int(args.get("eval_action_prefix") or checkpoint.get("metadata", {}).get("horizon") or int(checkpoint["action_dim"]) // 7)
+        action_width = int(args.get("action_width", 7))
+        model = PatchTransformerIDM(
+            feature_dim=int(checkpoint["feature_dim"]),
+            action_width=action_width,
+            horizon=horizon,
+            proprio_dim=int(checkpoint["proprio_dim"]),
+            width=int(args.get("hidden_dim", 512)),
+            depth=int(args.get("depth", 4)),
+            heads=int(args.get("heads", 8)),
+            mlp_ratio=float(args.get("mlp_ratio", 4.0)),
+            dropout=float(args.get("dropout", 0.1)),
+        ).to(device)
+    else:
+        model = FeatureIDM(
+            feature_dim=int(checkpoint["feature_dim"]),
+            action_dim=int(checkpoint["action_dim"]),
+            proprio_dim=int(checkpoint["proprio_dim"]),
+            hidden_dim=int(args.get("hidden_dim", 512)),
+            depth=int(args.get("depth", 4)),
+        ).to(device)
     model.load_state_dict(checkpoint["model_state"])
     model.eval()
-    return model
+    return model, model_type
 
 
 def _episode_rows(
     h5_path: Path,
-    idm: FeatureIDM,
+    idm: torch.nn.Module,
+    idm_type: str,
     encoder,
     processor,
     device: torch.device,
@@ -165,14 +200,26 @@ def _episode_rows(
             model_future_images = _to_images(query_future[ids])
             observed_future_images = _to_images(np.stack([primary[int(query_t[i]) + horizon] for i in ids], axis=0))
 
-            z_current = _encode_batch(encoder, processor, current_images, device)
-            z_model = _encode_batch(encoder, processor, model_future_images, device)
-            z_observed = _encode_batch(encoder, processor, observed_future_images, device)
             proprio = torch.tensor(query_proprio[ids].reshape(len(ids), -1), dtype=torch.float32, device=device)
 
             with torch.no_grad():
-                implied_model = idm(z_current, z_model, proprio).detach().cpu().numpy().astype(np.float32)
-                implied_observed = idm(z_current, z_observed, proprio).detach().cpu().numpy().astype(np.float32)
+                if idm_type == "patch":
+                    z_current_patch = _encode_patch_batch(encoder, processor, current_images, device)
+                    z_model_patch = _encode_patch_batch(encoder, processor, model_future_images, device)
+                    z_observed_patch = _encode_patch_batch(encoder, processor, observed_future_images, device)
+                    horizon_for_window = int(query_actions.shape[1])
+                    implied_model = idm(_patch_window(z_current_patch, z_model_patch, horizon_for_window), proprio)
+                    implied_observed = idm(_patch_window(z_current_patch, z_observed_patch, horizon_for_window), proprio)
+                    z_model = torch.nn.functional.normalize(z_model_patch.mean(dim=1), dim=-1)
+                    z_observed = torch.nn.functional.normalize(z_observed_patch.mean(dim=1), dim=-1)
+                else:
+                    z_current = _encode_batch(encoder, processor, current_images, device)
+                    z_model = _encode_batch(encoder, processor, model_future_images, device)
+                    z_observed = _encode_batch(encoder, processor, observed_future_images, device)
+                    implied_model = idm(z_current, z_model, proprio)
+                    implied_observed = idm(z_current, z_observed, proprio)
+                implied_model = implied_model.detach().cpu().numpy().astype(np.float32)
+                implied_observed = implied_observed.detach().cpu().numpy().astype(np.float32)
 
             feature_delta = (z_observed - z_model).detach().cpu().numpy().astype(np.float32)
             feature_cos = torch.nn.functional.cosine_similarity(z_observed, z_model, dim=-1).detach().cpu().numpy()
@@ -331,13 +378,13 @@ def main() -> None:
     out_dir = Path(args.out_dir).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    idm = _load_idm(Path(args.checkpoint), device)
+    idm, idm_type = _load_idm(Path(args.checkpoint), device)
     processor = AutoProcessor.from_pretrained(args.encoder)
     encoder = AutoModel.from_pretrained(args.encoder).to(device).eval()
 
     rows: list[dict[str, Any]] = []
     for h5_path in files:
-        rows.extend(_episode_rows(h5_path, idm, encoder, processor, device, args.batch_size))
+        rows.extend(_episode_rows(h5_path, idm, idm_type, encoder, processor, device, args.batch_size))
     if not rows:
         raise SystemExit("No valid query rows found. Check data_collection=True and future predictions in rollout HDF5.")
 
@@ -347,8 +394,10 @@ def main() -> None:
         {
             "input_files": [str(path) for path in files],
             "checkpoint": str(Path(args.checkpoint).expanduser()),
+            "idm_type": idm_type,
             "encoder": args.encoder,
             "horizon_note": "Observed future is primary_images[query_t + horizon_k]; Cosmos predicted future is query_future_primary_images at the same model-query point.",
+            "patch_idm_adapter_note": "For patch IDM checkpoints, online C/P pairs are adapted to the training window as [C repeated k times, P].",
             "preprocessing_note": "Online rollout HDF5 stores the already prepared Cosmos LIBERO frames; no additional flip is applied.",
         }
     )

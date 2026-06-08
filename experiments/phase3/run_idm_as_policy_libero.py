@@ -17,7 +17,7 @@ from PIL import Image
 from tqdm import tqdm
 from transformers import AutoModel, AutoProcessor
 
-from experiments.idm.model.idm import FeatureIDM
+from experiments.idm.model.idm import FeatureIDM, PatchTransformerIDM
 
 
 def _add_cosmos_policy_to_path(path: str) -> None:
@@ -45,22 +45,57 @@ def _encode_image(model, processor, image: np.ndarray, device: torch.device) -> 
     return torch.nn.functional.normalize(features.float(), dim=-1)
 
 
-def _load_idm(checkpoint_path: Path, device: torch.device) -> FeatureIDM:
+def _encode_patch_image(model, processor, image: np.ndarray, device: torch.device) -> torch.Tensor:
+    pil = Image.fromarray(np.asarray(image, dtype=np.uint8)).convert("RGB")
+    batch = processor(images=[pil], return_tensors="pt")
+    batch = {key: value.to(device) for key, value in batch.items()}
+    with torch.no_grad():
+        vision_model = getattr(model, "vision_model", model)
+        output = vision_model(**batch)
+    if not hasattr(output, "last_hidden_state"):
+        raise RuntimeError("Patch IDM requires encoder last_hidden_state patch tokens")
+    return output.last_hidden_state.float()
+
+
+def _patch_window(z_current: torch.Tensor, z_future: torch.Tensor, horizon: int) -> torch.Tensor:
+    current = z_current.unsqueeze(1).expand(-1, horizon, -1, -1)
+    future = z_future.unsqueeze(1)
+    return torch.cat([current, future], dim=1)
+
+
+def _load_idm(checkpoint_path: Path, device: torch.device) -> tuple[torch.nn.Module, str]:
     checkpoint = torch.load(checkpoint_path.expanduser(), map_location="cpu", weights_only=False)
-    idm = FeatureIDM(
-        feature_dim=int(checkpoint["feature_dim"]),
-        action_dim=int(checkpoint["action_dim"]),
-        proprio_dim=int(checkpoint["proprio_dim"]),
-        hidden_dim=int(checkpoint["args"]["hidden_dim"]),
-        depth=int(checkpoint["args"]["depth"]),
-    ).to(device)
+    args = checkpoint.get("args", {})
+    model_type = str(args.get("model_type", "feature"))
+    if model_type == "patch":
+        horizon = int(args.get("eval_action_prefix") or int(checkpoint["action_dim"]) // int(args.get("action_width", 7)))
+        idm = PatchTransformerIDM(
+            feature_dim=int(checkpoint["feature_dim"]),
+            action_width=int(args.get("action_width", 7)),
+            horizon=horizon,
+            proprio_dim=int(checkpoint["proprio_dim"]),
+            width=int(args.get("hidden_dim", 512)),
+            depth=int(args.get("depth", 4)),
+            heads=int(args.get("heads", 8)),
+            mlp_ratio=float(args.get("mlp_ratio", 4.0)),
+            dropout=float(args.get("dropout", 0.1)),
+        ).to(device)
+    else:
+        idm = FeatureIDM(
+            feature_dim=int(checkpoint["feature_dim"]),
+            action_dim=int(checkpoint["action_dim"]),
+            proprio_dim=int(checkpoint["proprio_dim"]),
+            hidden_dim=int(args.get("hidden_dim", 512)),
+            depth=int(args.get("depth", 4)),
+        ).to(device)
     idm.load_state_dict(checkpoint["model_state"])
     idm.eval()
-    return idm
+    return idm, model_type
 
 
 def _idm_action_chunk(
-    idm: FeatureIDM,
+    idm: torch.nn.Module,
+    idm_type: str,
     encoder,
     processor,
     current_image: np.ndarray,
@@ -68,11 +103,17 @@ def _idm_action_chunk(
     proprio: np.ndarray,
     device: torch.device,
 ) -> np.ndarray:
-    z_current = _encode_image(encoder, processor, current_image, device)
-    z_future = _encode_image(encoder, processor, future_image, device)
     proprio_t = torch.as_tensor(proprio.reshape(1, -1), dtype=torch.float32, device=device)
     with torch.no_grad():
-        pred = idm(z_current, z_future, proprio_t).detach().cpu().numpy()[0].astype(np.float32)
+        if idm_type == "patch":
+            z_current = _encode_patch_image(encoder, processor, current_image, device)
+            z_future = _encode_patch_image(encoder, processor, future_image, device)
+            pred = idm(_patch_window(z_current, z_future, 16), proprio_t)
+        else:
+            z_current = _encode_image(encoder, processor, current_image, device)
+            z_future = _encode_image(encoder, processor, future_image, device)
+            pred = idm(z_current, z_future, proprio_t)
+        pred = pred.detach().cpu().numpy()[0].astype(np.float32)
     return pred.reshape(16, 7)
 
 
@@ -202,7 +243,7 @@ def main() -> None:
     assert cfg.chunk_size == cosmos_config.dataloader_train.dataset.chunk_size
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    idm = _load_idm(Path(args.idm_checkpoint), device)
+    idm, idm_type = _load_idm(Path(args.idm_checkpoint), device)
     processor = AutoProcessor.from_pretrained(args.encoder)
     encoder = AutoModel.from_pretrained(args.encoder).to(device).eval()
 
@@ -278,6 +319,7 @@ def main() -> None:
                         raise RuntimeError("Cosmos did not return future_image; cannot query IDM policy")
                     idm_chunk = _idm_action_chunk(
                         idm,
+                        idm_type,
                         encoder,
                         processor,
                         observation["primary_image"],
@@ -404,7 +446,9 @@ def main() -> None:
         "task_ids": task_ids,
         "num_trials_per_task": args.num_trials_per_task,
         "idm_checkpoint": str(Path(args.idm_checkpoint).expanduser()),
+        "idm_type": idm_type,
         "encoder": args.encoder,
+        "patch_idm_adapter_note": "For patch IDM checkpoints, online C/P pairs are adapted to the training window as [C repeated k times, P].",
         "clip_actions": args.clip_actions,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
