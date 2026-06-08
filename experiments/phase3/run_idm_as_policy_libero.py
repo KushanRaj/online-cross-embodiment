@@ -13,11 +13,9 @@ from typing import Any
 import h5py
 import numpy as np
 import torch
-from PIL import Image
 from tqdm import tqdm
-from transformers import AutoModel, AutoProcessor
 
-from experiments.idm.model.idm import FeatureIDM, PatchTransformerIDM
+from experiments.idm.model.adapter import ImageIDMAdapter
 
 
 def _add_cosmos_policy_to_path(path: str) -> None:
@@ -25,96 +23,13 @@ def _add_cosmos_policy_to_path(path: str) -> None:
         sys.path.insert(0, path)
 
 
-def _encode_image(model, processor, image: np.ndarray, device: torch.device) -> torch.Tensor:
-    pil = Image.fromarray(np.asarray(image, dtype=np.uint8)).convert("RGB")
-    batch = processor(images=[pil], return_tensors="pt")
-    batch = {key: value.to(device) for key, value in batch.items()}
-    with torch.no_grad():
-        if hasattr(model, "get_image_features"):
-            output = model.get_image_features(**batch)
-        else:
-            output = model(**batch)
-    if isinstance(output, torch.Tensor):
-        features = output
-    elif getattr(output, "pooler_output", None) is not None:
-        features = output.pooler_output
-    elif hasattr(output, "last_hidden_state"):
-        features = output.last_hidden_state.mean(dim=1)
-    else:
-        raise RuntimeError("Encoder output has neither pooler_output nor last_hidden_state")
-    return torch.nn.functional.normalize(features.float(), dim=-1)
-
-
-def _encode_patch_image(model, processor, image: np.ndarray, device: torch.device) -> torch.Tensor:
-    pil = Image.fromarray(np.asarray(image, dtype=np.uint8)).convert("RGB")
-    batch = processor(images=[pil], return_tensors="pt")
-    batch = {key: value.to(device) for key, value in batch.items()}
-    with torch.no_grad():
-        vision_model = getattr(model, "vision_model", model)
-        output = vision_model(**batch)
-    if not hasattr(output, "last_hidden_state"):
-        raise RuntimeError("Patch IDM requires encoder last_hidden_state patch tokens")
-    return output.last_hidden_state.float()
-
-
-def _patch_window(z_current: torch.Tensor, z_future: torch.Tensor, horizon: int) -> torch.Tensor:
-    current = z_current.unsqueeze(1).expand(-1, horizon, -1, -1)
-    future = z_future.unsqueeze(1)
-    return torch.cat([current, future], dim=1)
-
-
-def _load_idm(checkpoint_path: Path, device: torch.device) -> tuple[torch.nn.Module, str]:
-    checkpoint = torch.load(checkpoint_path.expanduser(), map_location="cpu", weights_only=False)
-    args = checkpoint.get("args", {})
-    model_type = str(args.get("model_type", "feature"))
-    if model_type == "patch":
-        horizon = int(args.get("eval_action_prefix") or int(checkpoint["action_dim"]) // int(args.get("action_width", 7)))
-        idm = PatchTransformerIDM(
-            feature_dim=int(checkpoint["feature_dim"]),
-            action_width=int(args.get("action_width", 7)),
-            horizon=horizon,
-            proprio_dim=int(checkpoint["proprio_dim"]),
-            width=int(args.get("hidden_dim", 512)),
-            depth=int(args.get("depth", 4)),
-            heads=int(args.get("heads", 8)),
-            mlp_ratio=float(args.get("mlp_ratio", 4.0)),
-            dropout=float(args.get("dropout", 0.1)),
-        ).to(device)
-    else:
-        idm = FeatureIDM(
-            feature_dim=int(checkpoint["feature_dim"]),
-            action_dim=int(checkpoint["action_dim"]),
-            proprio_dim=int(checkpoint["proprio_dim"]),
-            hidden_dim=int(args.get("hidden_dim", 512)),
-            depth=int(args.get("depth", 4)),
-        ).to(device)
-    idm.load_state_dict(checkpoint["model_state"])
-    idm.eval()
-    return idm, model_type
-
-
 def _idm_action_chunk(
-    idm: torch.nn.Module,
-    idm_type: str,
-    encoder,
-    processor,
+    idm: ImageIDMAdapter,
     current_image: np.ndarray,
     future_image: np.ndarray,
     proprio: np.ndarray,
-    device: torch.device,
 ) -> np.ndarray:
-    proprio_t = torch.as_tensor(proprio.reshape(1, -1), dtype=torch.float32, device=device)
-    with torch.no_grad():
-        if idm_type == "patch":
-            z_current = _encode_patch_image(encoder, processor, current_image, device)
-            z_future = _encode_patch_image(encoder, processor, future_image, device)
-            pred = idm(_patch_window(z_current, z_future, 16), proprio_t)
-        else:
-            z_current = _encode_image(encoder, processor, current_image, device)
-            z_future = _encode_image(encoder, processor, future_image, device)
-            pred = idm(z_current, z_future, proprio_t)
-        pred = pred.detach().cpu().numpy()[0].astype(np.float32)
-    return pred.reshape(16, 7)
+    return idm.predict([current_image], [future_image], proprio.reshape(1, -1))[0]
 
 
 def _jpeg_dataset(handle: h5py.File, name: str, value: np.ndarray, jpeg_encode_image, jpeg: bool) -> None:
@@ -243,9 +158,7 @@ def main() -> None:
     assert cfg.chunk_size == cosmos_config.dataloader_train.dataset.chunk_size
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    idm, idm_type = _load_idm(Path(args.idm_checkpoint), device)
-    processor = AutoProcessor.from_pretrained(args.encoder)
-    encoder = AutoModel.from_pretrained(args.encoder).to(device).eval()
+    idm = ImageIDMAdapter(Path(args.idm_checkpoint), args.encoder, device)
 
     benchmark_dict = benchmark.get_benchmark_dict()
     task_suite = benchmark_dict[cfg.task_suite_name]()
@@ -319,13 +232,9 @@ def main() -> None:
                         raise RuntimeError("Cosmos did not return future_image; cannot query IDM policy")
                     idm_chunk = _idm_action_chunk(
                         idm,
-                        idm_type,
-                        encoder,
-                        processor,
                         observation["primary_image"],
                         future_image,
                         observation["proprio"],
-                        device,
                     )
                     if args.clip_actions:
                         idm_chunk = np.clip(idm_chunk, args.clip_min, args.clip_max)
@@ -446,9 +355,9 @@ def main() -> None:
         "task_ids": task_ids,
         "num_trials_per_task": args.num_trials_per_task,
         "idm_checkpoint": str(Path(args.idm_checkpoint).expanduser()),
-        "idm_type": idm_type,
+        "idm_type": idm.model_type,
         "encoder": args.encoder,
-        "patch_idm_adapter_note": "For patch IDM checkpoints, online C/P pairs are adapted to the training window as [C repeated k times, P].",
+        "patch_idm_adapter_note": idm.adapter_note,
         "clip_actions": args.clip_actions,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
