@@ -676,3 +676,121 @@ The `decoder used` field matters because decoded RGB is the bridge from model-pr
 - Should `source_id` be enough, or do we need explicit `model_id` embeddings?
 - Should the output be raw action chunk or normalized action chunk in environment units?
 - Should gripper be modeled as regression or classification?
+
+## Next Track - RoboCasa IDM Dataset
+
+The next dataset direction is RoboCasa, but it should be treated as a separate sanity pass rather than mixed into LIBERO immediately.
+
+The reason is simple:
+
+```text
+LIBERO is small and toy-like.
+RoboCasa has richer household scenes, more contact variation, and more visual diversity.
+```
+
+If the same IDM-style deviation signal still correlates with failure in RoboCasa, the claim becomes less likely to be a LIBERO artifact.
+
+RoboCasa manifest shape:
+
+```text
+sample_id
+task_name
+trajectory_id
+t
+horizon
+current_primary_image
+future_primary_image
+current_wrist_image optional
+future_wrist_image optional
+current_proprio
+action_chunk_horizon_x_D
+success/failure if available
+source = robocasa_real_real
+```
+
+Later, add model futures:
+
+```text
+source = robocasa_real_model_cosmos
+current_real_image
+future_model_image
+action_chunk_from_model
+model_id
+decoder/preprocessing_used
+```
+
+First RoboCasa experiment:
+
+```text
+1. Export RoboCasa real -> real IDM windows.
+2. Train a RoboCasa-only MLP IDM baseline.
+3. Run Cosmos RoboCasa future predictions if the model gives plausible images.
+4. Compute IDM(C, P) vs policy action.
+5. Compare success/failure and gripper/contact spikes.
+6. Only then try LIBERO + RoboCasa mixed IDM.
+```
+
+Expectation should stay grounded:
+
+```text
+RoboCasa will add distribution shift and preprocessing bugs first.
+The first goal is dataset sanity, not a stronger headline result.
+```
+
+## Next Track - LIBERO Policy Deviation Across Policies
+
+The immediate LIBERO comparison should go back to the MLP IDM baseline first, then swap policies while keeping the world-model future source fixed.
+
+Policy set:
+
+```text
+1. MLP IDM baseline / current IDM diagnostic policy
+2. pi0.5 policy
+3. Molmo policy
+```
+
+World-model future source:
+
+```text
+Cosmos predicted future P
+```
+
+For each policy rollout window:
+
+```text
+C = current observation
+P = Cosmos predicted future
+a_policy = action chunk from the active policy
+
+score = distance(IDM(C, P), a_policy)
+```
+
+This keeps the question clean:
+
+```text
+Given the same imagined future, how aligned is each policy's action with the action implied by the IDM?
+```
+
+The π0.5 and Molmo setup should not change the metric logic. They only replace the source of `a_policy`.
+
+Required outputs:
+
+```text
+execution video
+Cosmos predicted future video/frame
+IDM(C, P) vs a_policy trace
+success/failure label
+task and prompt
+```
+
+The comparison should be run on the same LIBERO tasks where possible, because otherwise the deviation plots become a mixture of policy quality and task distribution.
+
+Core readout:
+
+```text
+Does the IDM-world-model mismatch separate failures from successes for each policy?
+Does one policy have systematically higher imagined-action inconsistency than another?
+Do prompt/task perturbations increase mismatch before visible failure?
+```
+
+This is the concrete bridge from the current Cosmos-policy experiments to π0.5 and Molmo.
