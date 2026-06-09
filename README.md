@@ -11,6 +11,8 @@ The main thesis we are tracking:
 
 ## Where Things Live
 
+- `docs/INDEX.md` - first stop for future agents; links repo map, experiment
+  plans, operating rules, and casebook.
 - `index.html`, `about.html`, `blog/`, `posts/`, `assets/` - the public GitHub Pages site and blog skeleton.
 - `Robotics World Models.md` - the top-level map of content.
 - `papers/` - paper-level notes plus the paper catalog.
