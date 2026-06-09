@@ -40,16 +40,21 @@ def _by_episode(rows: list[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
 
 def _save_success_failure_boxplots(rows: list[dict[str, str]], out_dir: Path) -> None:
     metrics = [
+        ("idm_model_vs_selected_l2", "chunk L2: IDM(C,P) vs a"),
+        ("idm_observed_vs_selected_l2", "chunk L2: IDM(C,R) vs a"),
+        ("idm_model_observed_l2", "chunk L2: IDM(C,P) vs IDM(C,R)"),
+        ("idm_model_vs_selected_step_l2", "mean per-step L2"),
+        ("idm_model_vs_selected_eef_step_l2", "EEF mean per-step L2"),
         ("idm_model_vs_selected_step_cos_dist", "mean per-step 1-cos"),
         ("idm_model_vs_selected_eef_step_cos_dist", "EEF mean per-step 1-cos"),
-        ("idm_model_vs_selected_step_l2", "mean per-step L2"),
+        ("idm_model_vs_selected_gripper_step_l1", "gripper mean per-step L1"),
         ("idm_model_vs_selected_gripper_mismatch_rate", "gripper mismatch rate"),
     ]
-    fig, axes = plt.subplots(1, len(metrics), figsize=(18, 4))
-    for ax, (key, title) in zip(axes, metrics):
+    fig, axes = plt.subplots(3, 3, figsize=(18, 11))
+    for ax, (key, title) in zip(axes.flat, metrics):
         success_vals = [_float(r, key) for r in rows if r["success"] == "True"]
         failure_vals = [_float(r, key) for r in rows if r["success"] == "False"]
-        ax.boxplot([success_vals, failure_vals], labels=["success", "failure"], showfliers=True)
+        ax.boxplot([success_vals, failure_vals], tick_labels=["success", "failure"], showfliers=True)
         ax.set_title(title)
         ax.grid(True, axis="y", alpha=0.25)
     fig.tight_layout()
@@ -60,8 +65,13 @@ def _save_success_failure_boxplots(rows: list[dict[str, str]], out_dir: Path) ->
 def _save_episode_mean_bar(rows: list[dict[str, str]], out_dir: Path) -> None:
     eps = _by_episode(rows)
     metrics = [
+        "idm_model_vs_selected_l2",
+        "idm_observed_vs_selected_l2",
+        "idm_model_vs_selected_step_l2",
+        "idm_model_vs_selected_eef_step_l2",
         "idm_model_vs_selected_step_cos_dist",
         "idm_model_vs_selected_eef_step_cos_dist",
+        "idm_model_vs_selected_gripper_step_l1",
         "idm_model_vs_selected_gripper_mismatch_rate",
     ]
     labels = []
@@ -75,7 +85,7 @@ def _save_episode_mean_bar(rows: list[dict[str, str]], out_dir: Path) -> None:
             means[key].append(float(np.nanmean(values)))
 
     x = np.arange(len(labels))
-    fig, axes = plt.subplots(len(metrics), 1, figsize=(max(12, len(labels) * 0.75), 10), sharex=True)
+    fig, axes = plt.subplots(len(metrics), 1, figsize=(max(12, len(labels) * 0.75), 18), sharex=True)
     for ax, key in zip(axes, metrics):
         colors = ["#2ca25f" if ok else "#de2d26" for ok in success]
         ax.bar(x, means[key], color=colors)
@@ -91,11 +101,16 @@ def _save_episode_mean_bar(rows: list[dict[str, str]], out_dir: Path) -> None:
 def _save_timeseries(rows: list[dict[str, str]], out_dir: Path) -> None:
     eps = _by_episode(rows)
     metrics = [
+        ("idm_model_vs_selected_l2", "IDM(C,P) vs a: chunk L2"),
+        ("idm_observed_vs_selected_l2", "IDM(C,R) vs a: chunk L2"),
+        ("idm_model_vs_selected_step_l2", "IDM(C,P) vs a: mean per-step L2"),
+        ("idm_model_vs_selected_eef_step_l2", "IDM(C,P) vs a: EEF mean per-step L2"),
         ("idm_model_vs_selected_step_cos_dist", "IDM(C,P) vs a: mean per-step 1-cos"),
         ("idm_model_vs_selected_eef_step_cos_dist", "IDM(C,P) vs a: EEF mean per-step 1-cos"),
+        ("idm_model_vs_selected_gripper_step_l1", "IDM(C,P) vs a: gripper mean per-step L1"),
         ("idm_model_vs_selected_gripper_mismatch_rate", "IDM(C,P) vs a: gripper sign mismatch rate"),
     ]
-    fig, axes = plt.subplots(len(metrics), 1, figsize=(14, 10), sharex=True)
+    fig, axes = plt.subplots(len(metrics), 1, figsize=(14, 20), sharex=True)
     for ax, (key, title) in zip(axes, metrics):
         for episode, ep_rows in eps.items():
             ok = ep_rows[0]["success"] == "True"
@@ -150,9 +165,14 @@ def _write_summary(rows: list[dict[str, str]], out_dir: Path) -> None:
         "failure_episodes": sum(1 for ep_rows in eps.values() if ep_rows[0]["success"] == "False"),
     }
     for key in [
+        "idm_model_vs_selected_l2",
+        "idm_observed_vs_selected_l2",
+        "idm_model_observed_l2",
         "idm_model_vs_selected_step_cos_dist",
         "idm_model_vs_selected_eef_step_cos_dist",
         "idm_model_vs_selected_step_l2",
+        "idm_model_vs_selected_eef_step_l2",
+        "idm_model_vs_selected_gripper_step_l1",
         "idm_model_vs_selected_gripper_mismatch_rate",
     ]:
         values = np.asarray([_float(r, key) for r in rows], dtype=np.float64)
