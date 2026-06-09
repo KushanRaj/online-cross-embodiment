@@ -11,15 +11,19 @@ The main thesis we are tracking:
 
 ## Where Things Live
 
-- `docs/INDEX.md` - first stop for future agents; links repo map, experiment
-  plans, operating rules, and casebook.
+- `docs/INDEX.md` - first stop for future agents; links the nested docs system.
+- `docs/code/` - repo map, IDM pipeline, Phase 3 rollout pipeline, metrics/video contract, EC2 contract, artifact layout.
+- `docs/plans/` - indexed plan bundles for Shared Semantic IDM, Phase 3 rollout benchmark, counterfactual world-model futures, and cross-embodiment future work.
+- `docs/research/` - session-mined research records.
+- `docs/experiments/` - run summaries tied to local `run-artifacts/` folders.
+- `docs/runbooks/` - operational recipes for local Python, EC2, Phase 3 eval/render, new policies, and new environments.
 - `index.html`, `about.html`, `blog/`, `posts/`, `assets/` - the public GitHub Pages site and blog skeleton.
 - `Robotics World Models.md` - the top-level map of content.
 - `papers/` - paper-level notes plus the paper catalog.
 - `pdfs/` - local paper PDFs.
 - `experiment-design/reports/` - larger synthesis reports: training methodology, benchmarks, datasets, compute, experiments, and public-review notes.
 - `experiments/` - tracked experiment code. Edit locally, sync/pull to EC2, run against remote data/checkpoints there.
-- `docs/planning/` - working experiment notes and older planning artifacts.
+- `docs/planning/` - older planning artifacts kept for reference.
 - `docs/slack/` - Slack-facing mirror artifacts, including the paper-list CSV draft.
 
 ## Experiment Workflow Rules

@@ -4,100 +4,94 @@ This is the first file to read in this repo.
 
 The repo has two jobs:
 
-1. Track the literature and thesis around world models, VLAs, planning, and
-   action translation.
-2. Run controlled experiments around prediction honesty: compare model-predicted
-   futures, observed futures, and policy actions through an IDM diagnostic.
+1. Track the literature and thesis around world models, VLAs, planning, and action translation.
+2. Run controlled experiments around prediction honesty: compare model-predicted futures, observed futures, and policy actions through an IDM diagnostic.
 
-## 1. Understand The Repo
+This index is intentionally layered like an Obsidian vault. Do not flatten it into one report. Use the category indexes first, then open the leaf documents relevant to the task.
 
-- `README.md` - public-facing summary and high-level research direction.
-- `OBSIDIAN.md` - how the repo mirrors the original Obsidian research notes.
-- `docs/repo-map.md` - exact map of important directories and code files.
-- `papers/paper-catalog.md` - paper inventory.
-- `Robotics World Models.md` - top-level research map/MOC.
+## Core Reference
 
-Use `docs/repo-map.md` when asking:
+| Doc | Purpose |
+|-----|---------|
+| [design-philosophy.md](design-philosophy.md) | The thesis: planning priors are useful, action translation is weak, and prediction honesty can be measured. |
+| [evolution.md](evolution.md) | Chronological record of how the project moved from paper reading to LIBERO/RoboCasa rollouts. |
+| [tuning-reference.md](tuning-reference.md) | Experiment knobs: horizons, encoders, IDM architecture, metrics, preprocessing, and policy cadence. |
+| [reflections.md](reflections.md) | User directives, grievances, and process rules mined from the working sessions. |
+| [next-challenges-and-open-questions.md](next-challenges-and-open-questions.md) | The unresolved research and engineering questions. |
 
-- Where is the rollout code?
-- Where is the diagnostic code?
-- Where is the plotting/video code?
-- Which scripts run locally vs on EC2?
-- What artifacts are produced and where are they expected to live?
+## Code And Repo Maps
 
-## 2. Experiment Plans
+| Doc | Purpose |
+|-----|---------|
+| [code/README.md](code/README.md) | Code documentation index. |
+| [code/01-repo-map.md](code/01-repo-map.md) | Directory and source-file map. |
+| [code/02-idm-pipeline.md](code/02-idm-pipeline.md) | IDM data, cache, model, training, and adapter pipeline. |
+| [code/03-phase3-rollout-pipeline.md](code/03-phase3-rollout-pipeline.md) | Online rollout runners and HDF5 contracts. |
+| [code/04-metrics-and-video-contract.md](code/04-metrics-and-video-contract.md) | Canonical metrics, plots, and video renderer behavior. |
+| [code/05-remote-ec2-contract.md](code/05-remote-ec2-contract.md) | Remote paths, EC2 discipline, and shutdown rules. |
+| [code/06-artifact-layout.md](code/06-artifact-layout.md) | Local and remote run artifact layout. |
 
-- `docs/experiment-plans.md` - current experiment phases and what each phase
-  means.
-- `experiment-design/Shared Semantic IDM - Prediction Reality Deviation.md` -
-  core IDM thesis and data contract.
-- `experiment-design/Phase 3 Clean Rollout Benchmark.md` - task suites and
-  benchmark rationale.
-- `experiment-design/Phase 3 Rollout Task Catalogue.md` - task-level catalogue.
-- `experiments/idm/README.md` - IDM training/data contract.
-- `experiments/phase3/README.md` - Phase 3 clean rollout setup and remote data.
+Compatibility wrappers:
 
-Use these when asking:
+| Legacy Doc | New Home |
+|------------|----------|
+| [repo-map.md](repo-map.md) | Summary wrapper for [code/](code/README.md). |
+| [experiment-plans.md](experiment-plans.md) | Summary wrapper for [plans/](plans/README.md). |
+| [operating-rules.md](operating-rules.md) | Summary wrapper for [reflections.md](reflections.md) and [runbooks/](runbooks/README.md). |
+| [behavior-casebook.md](behavior-casebook.md) | Historical behavior notes; new cases should point to [research/session-2026-06-idm-rollouts](research/session-2026-06-idm-rollouts/README.md). |
 
-- What are we trying to show?
-- What does `C`, `P`, `R`, or `a` mean?
-- What is Phase 1 vs Phase 3?
-- Which environments/tasks are in scope?
-- What is the correct action/reference dataset for a metric?
+## Plan Bundles
 
-## 3. Operating Rules And Grievances
+Each plan bundle is a small repository of micro-documents. Read the bundle README first.
 
-- `docs/operating-rules.md` - practical rules for agents working in this repo.
-- `docs/behavior-casebook.md` - dated cases of experiment behavior, failure
-  modes, and RCA handles.
+| # | Bundle | Status | What It Captures |
+|---|--------|--------|------------------|
+| 001 | [Shared Semantic IDM](plans/001-shared-semantic-idm/README.md) | Active | Train an embodiment-specific, model-agnostic IDM over semantic future pairs. |
+| 002 | [Phase 3 Rollout Benchmark](plans/002-phase3-rollout-benchmark/README.md) | Active | Run policies online and score prediction-action consistency against success/failure. |
+| 003 | [Counterfactual Action-Conditioned World Models](plans/003-counterfactual-action-conditioned-wm/README.md) | Planned | Move from joint policy probes to true action-conditioned future generation. |
+| 004 | [Cross-Embodiment Future](plans/004-cross-embodiment-future/README.md) | Parked | Arm-to-arm EEF adapter transfer and later morphology transfer. |
 
-These files exist because repeated issues slowed the project down:
+## Research Sessions
 
-- rewriting code instead of reusing canonical runners,
-- changing plot layouts and metrics without asking,
-- mixing up selected action, executed action, Cosmos action, and IDM action,
-- forgetting preprocessing/horizon caveats,
-- running local scripts outside the `uv` env,
-- starting EC2 jobs without a shutdown/download plan.
+| Session | Purpose |
+|---------|---------|
+| [2026-06 IDM Rollouts](research/session-2026-06-idm-rollouts/README.md) | Conversation-mined research record for the IDM/Cosmos/LIBERO/RoboCasa work. |
 
-## 4. Current Core Experiment Vocabulary
+## Experiment Records
 
-For the prediction-reality deviation experiments:
+| Doc | Run / Evidence |
+|-----|----------------|
+| [experiments/2026-06-03-libero-cosmos-expanded.md](experiments/2026-06-03-libero-cosmos-expanded.md) | LIBERO Cosmos Policy expanded run and corrected diagnostics. |
+| [experiments/2026-06-08-pi-molmo-libero-probes.md](experiments/2026-06-08-pi-molmo-libero-probes.md) | Pi 0.5 and MolmoAct2 LIBERO probes with Cosmos futures. |
+| [experiments/2026-06-09-robocasa-cosmos-policy.md](experiments/2026-06-09-robocasa-cosmos-policy.md) | RoboCasa Cosmos Policy run with RoboCasa IDM diagnostics. |
+| [experiments/2026-06-09-robocasa-idm-as-policy.md](experiments/2026-06-09-robocasa-idm-as-policy.md) | RoboCasa IDM-as-policy run and the correct Cosmos-reference interpretation. |
 
-```text
-C = current observation
-P = model-predicted future observation
-R = real observed future observation
-a = action chunk selected/executed by the policy under test
-IDM(C, P) = action chunk implied by the world model future
-IDM(C, R) = action chunk implied by the observed future
-```
+## Runbooks
 
-Important distinction:
+| Doc | Use When |
+|-----|----------|
+| [runbooks/README.md](runbooks/README.md) | Choosing the right operational recipe. |
+| [runbooks/local-python.md](runbooks/local-python.md) | Running local scripts without violating the `uv` rule. |
+| [runbooks/ec2-remote-run.md](runbooks/ec2-remote-run.md) | Starting/syncing/running/stopping EC2 work. |
+| [runbooks/phase3-evaluate-and-render.md](runbooks/phase3-evaluate-and-render.md) | Evaluating rollouts and rendering canonical videos. |
+| [runbooks/adding-a-new-policy.md](runbooks/adding-a-new-policy.md) | Adding Pi/Molmo/new policy probes without changing metrics. |
+| [runbooks/adding-a-new-environment.md](runbooks/adding-a-new-environment.md) | Adding RoboCasa-style environment support. |
 
-```text
-query_action_chunks
-  action chunks selected/executed by the policy for this rollout
+## Literature And Reports
 
-query_cosmos_action_chunks
-  Cosmos Policy's own action-head prediction at the same query point
-```
+| Location | Purpose |
+|----------|---------|
+| [papers/paper-catalog.md](../papers/paper-catalog.md) | Paper inventory. |
+| [papers/](../papers/) | Individual paper notes. |
+| [experiment-design/reports/](../experiment-design/reports/) | Larger synthesis reports: datasets, benchmarks, training methodology, compute, public review. |
+| [experiment-design/](../experiment-design/) | Older but still useful experiment notes and task catalogues. |
 
-For Pi/Molmo/IDM-as-policy probes, Cosmos futures currently come from Cosmos's
-own current-observation/task-conditioned generation path. The external policy
-action is not fed into Cosmos as action conditioning.
+## Minimum Read Order Before Experiment Work
 
-## 5. Fast Start For Future Agents
+1. [reflections.md](reflections.md)
+2. [code/README.md](code/README.md)
+3. The specific plan bundle for the task.
+4. The relevant runbook.
+5. The exact source files named by the runbook.
 
-Before doing new experiment work:
-
-```bash
-pwd
-git status --short
-sed -n '1,220p' docs/INDEX.md
-sed -n '1,260p' docs/repo-map.md
-sed -n '1,260p' docs/operating-rules.md
-```
-
-Then read only the relevant experiment source files named in the repo map.
-
+Do not start by scanning random files. The repo already has canonical runners, evaluators, renderers, and artifact contracts.
