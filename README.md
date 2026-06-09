@@ -20,6 +20,14 @@ The main thesis we are tracking:
 - `docs/planning/` - working experiment notes and older planning artifacts.
 - `docs/slack/` - Slack-facing mirror artifacts, including the paper-list CSV draft.
 
+## Experiment Workflow Rules
+
+Do not run project Python through bare system Python or the Codex bundled
+runtime. For local experiment scripts, initialize and use a `uv` environment
+first, then run through that environment. This keeps plotting, analysis, and
+training utilities reproducible instead of depending on whatever Python happens
+to be available on the machine.
+
 ## Current Research Direction
 
 The immediate experiment family is not "train the biggest VLA." It is:
