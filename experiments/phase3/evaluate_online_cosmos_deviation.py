@@ -114,7 +114,9 @@ def _episode_rows(
         if query_actions is None:
             query_actions = _read_array(h5, "query_action_chunks")
         query_values = _read_array(h5, "query_values")
-        executed_actions = _read_array(h5, "actions")
+        executed_actions = _read_array(h5, "actions_7d")
+        if executed_actions is None:
+            executed_actions = _read_array(h5, "actions")
         if primary is None or query_primary is None or query_future is None:
             return rows
         if query_t is None or query_proprio is None or query_actions is None:
@@ -139,11 +141,15 @@ def _episode_rows(
             for local, i in enumerate(ids):
                 t = int(query_t[i])
                 selected_chunk = query_actions[i].astype(np.float32)
-                executed_chunk = executed_actions[t : t + horizon].astype(np.float32)
+                executed_chunk = None
+                if executed_actions is not None and t + horizon <= len(executed_actions):
+                    executed_chunk = executed_actions[t : t + horizon].astype(np.float32)
+                    if executed_chunk.ndim == 2 and executed_chunk.shape[-1] > 7:
+                        executed_chunk = executed_chunk[:, :7]
                 model_chunk = implied_model[local].reshape(horizon, 7)
                 observed_chunk = implied_observed[local].reshape(horizon, 7)
                 selected_action = selected_chunk.reshape(-1)
-                executed_action = executed_chunk.reshape(-1)
+                executed_action = executed_chunk.reshape(-1) if executed_chunk is not None else None
                 model_action = model_chunk.reshape(-1)
                 observed_action = observed_chunk.reshape(-1)
                 rows.append(
@@ -178,7 +184,9 @@ def _episode_rows(
                         "idm_model_vs_selected_gripper_mismatch_rate": _gripper_mismatch_rate(model_chunk, selected_chunk),
                         "selected_gripper_flip_count": _gripper_flip_count(selected_chunk),
                         "idm_model_gripper_flip_count": _gripper_flip_count(model_chunk),
-                        "selected_vs_executed_l2": _norm(selected_action - executed_action),
+                        "selected_vs_executed_l2": _norm(selected_action - executed_action)
+                        if executed_action is not None and executed_action.shape == selected_action.shape
+                        else float("nan"),
                     }
                 )
     return rows
@@ -260,7 +268,7 @@ def _plot(rows: list[dict[str, Any]], out_dir: Path) -> None:
     ax.set_xticks(x)
     ax.set_xticklabels(task_names, rotation=25, ha="right", fontsize=8)
     ax.set_ylabel("mean IDM model-observed L2")
-    ax.set_title("Cosmos online rollout deviation by LIBERO-10 task")
+    ax.set_title("Cosmos online rollout deviation by task")
     ax.grid(True, axis="y", alpha=0.25)
     fig.tight_layout()
     fig.savefig(out_dir / "online_cosmos_deviation_by_task.png", dpi=180)
@@ -310,7 +318,7 @@ def main() -> None:
             "reference_action_dataset": args.reference_action_dataset,
             "horizon_note": "Observed future is primary_images[query_t + horizon_k]; Cosmos predicted future is query_future_primary_images at the same model-query point.",
             "patch_idm_adapter_note": idm.adapter_note,
-            "preprocessing_note": "Online rollout HDF5 stores the already prepared Cosmos LIBERO frames; no additional flip is applied.",
+            "preprocessing_note": "Online rollout HDF5 stores the already prepared Cosmos frames; no additional flip is applied here.",
         }
     )
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import io
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -63,13 +64,30 @@ def _apply_transform(array: np.ndarray, transform: str | None) -> np.ndarray:
     raise ValueError(f"Unsupported image transform: {transform}")
 
 
+def _decode_hdf5_image(value: Any) -> np.ndarray:
+    if isinstance(value, (bytes, bytearray)):
+        return np.asarray(Image.open(io.BytesIO(value)).convert("RGB"), dtype=np.uint8)
+    array = np.asarray(value)
+    if array.dtype == object:
+        item = array.item() if array.shape == () else array.reshape(-1)[0]
+        return _decode_hdf5_image(item)
+    if array.ndim == 1 and array.dtype == np.uint8:
+        return np.asarray(Image.open(io.BytesIO(array.tobytes())).convert("RGB"), dtype=np.uint8)
+    if array.ndim == 0 and array.dtype.kind in {"S", "U"}:
+        raw = array.item()
+        if isinstance(raw, str):
+            raw = raw.encode("latin1")
+        return np.asarray(Image.open(io.BytesIO(raw)).convert("RGB"), dtype=np.uint8)
+    return array
+
+
 def _load_hdf5_frame(row: ManifestRow, path_key: str, index_key: str, transform_key: str) -> Image.Image:
     import h5py
 
     h5_path = Path(row.raw["source_file"]).expanduser()
     with h5py.File(h5_path, "r") as h5:
         frame = h5[row.raw[path_key]][int(row.raw[index_key])]
-    frame = _apply_transform(np.asarray(frame), row.raw.get(transform_key))
+    frame = _apply_transform(_decode_hdf5_image(frame), row.raw.get(transform_key))
     return Image.fromarray(frame.astype(np.uint8)).convert("RGB")
 
 

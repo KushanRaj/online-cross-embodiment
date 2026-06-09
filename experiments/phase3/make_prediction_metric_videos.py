@@ -75,6 +75,16 @@ def _task_id(path: Path) -> int:
     return int(match.group(1)) if match else 0
 
 
+def _task_slug(path: Path) -> str:
+    match = re.search(r"--task=([^/]+?)--", path.name)
+    if match:
+        value = match.group(1)
+    else:
+        value = path.stem
+    value = re.sub(r"[^A-Za-z0-9_.-]+", "_", value).strip("_")
+    return value[:80] or "task"
+
+
 def _plot_frame(rows: list[dict[str, str]], active: int, width: int, height: int) -> Image.Image:
     metrics = [
         ("idm_model_vs_selected_step_l2", "|| IDM(C,P) - a ||"),
@@ -128,7 +138,10 @@ def _make_video(h5_path: Path, rows: list[dict[str, str]], out_path: Path, fps: 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     status = "SUCCESS" if success else "FAILURE"
     status_color = "#15803d" if success else "#b91c1c"
-    task_label = f"{status} | task {_task_id(h5_path)} ep {_episode_num(h5_path)} | {task}"
+    task_name = _task_slug(h5_path)
+    if task_name.isdigit():
+        task_name = f"task {_task_id(h5_path)}"
+    task_label = f"{status} | {task_name} ep {_episode_num(h5_path)} | {task}"
 
     image_w, image_h = 560, 420
     plot_w, plot_h = 800, 420
@@ -180,13 +193,13 @@ def main() -> None:
     run_root = Path(args.run_root)
     rows_by_episode = _load_rows(Path(args.csv))
     out_dir = Path(args.out_dir)
-    files = sorted(run_root.rglob("rollout_data/*.hdf5"), key=lambda p: (_task_id(p), _episode_num(p)))
+    files = sorted(run_root.rglob("rollout_data/*.hdf5"), key=lambda p: (_task_slug(p), _episode_num(p)))
     for h5_path in files:
         rows = _find_rows_for_h5(h5_path, rows_by_episode)
         if not rows:
             continue
         status = "true" if rows[0]["success"] == "True" else "false"
-        out_name = f"prediction_metrics_task{_task_id(h5_path)}_ep{_episode_num(h5_path)}_{status}.mp4"
+        out_name = f"prediction_metrics_{_task_slug(h5_path)}_ep{_episode_num(h5_path)}_{status}.mp4"
         _make_video(h5_path, rows, out_dir / out_name, args.fps, args.repeats)
         print(out_dir / out_name)
 

@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from PIL import Image
 from tqdm import tqdm
-from transformers import AutoModel, AutoProcessor
+from transformers import AutoImageProcessor, AutoModel, AutoProcessor
 
 from experiments.idm.data.manifest import load_current_image, load_future_image, read_manifest
 
@@ -30,6 +30,13 @@ def _encode_batch(model, processor, images: list[Image.Image], device: torch.dev
     else:
         raise RuntimeError("Encoder output has neither pooler_output nor last_hidden_state")
     return torch.nn.functional.normalize(features.float(), dim=-1).cpu()
+
+
+def _load_image_processor(name: str):
+    try:
+        return AutoImageProcessor.from_pretrained(name)
+    except Exception:
+        return AutoProcessor.from_pretrained(name)
 
 
 def _stack_actions(rows) -> torch.Tensor:
@@ -95,7 +102,7 @@ def main() -> None:
         raise SystemExit("No manifest rows found")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    processor = AutoProcessor.from_pretrained(args.encoder)
+    processor = _load_image_processor(args.encoder)
     model = AutoModel.from_pretrained(args.encoder).to(device).eval()
 
     z_current: list[torch.Tensor] = []

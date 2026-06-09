@@ -73,6 +73,64 @@ by the Cosmos Policy code path. The transform is stored per frame in the
 manifest, so later GE/Cosmos diagnostics can be canonicalized deliberately
 instead of silently mixing image conventions.
 
+## RoboCasa Contract
+
+RoboCasa uses the same Phase 1 IDM shape as LIBERO for the first baseline:
+
+```text
+IDM(C, F, proprio) -> 16 x 7 action chunk
+```
+
+The RoboCasa/Cosmos dataset files we use are rollout-style HDF5 episodes with
+top-level arrays such as:
+
+```text
+primary_images_jpeg
+actions
+proprio
+```
+
+The action convention is:
+
+```text
+dataset action label: first 7 dims only
+IDM output:           16 x 7
+Cosmos policy output: first 7 manipulation dims
+RoboCasa env.step:    12D after appending fixed mobile-base tail [0, 0, 0, 0, -1]
+```
+
+The mobile-base padding is only a rollout execution detail. It is not part of
+the IDM target or the deviation metric.
+
+For this first RoboCasa MLP run, keep the setup copied from the LIBERO feature
+IDM baseline:
+
+```text
+source = real -> real RoboCasa-Cosmos trajectories
+horizon = 16
+encoder = google/siglip-base-patch16-224
+model = feature MLP IDM
+target = 16 x 7 manipulation action chunk
+success_label = metadata only, never an IDM input
+```
+
+The selected rollout task families are the Cosmos/RoboCasa Phase 3 set used in
+the first run:
+
+```text
+CloseDrawer
+CoffeeServeMug
+CoffeeSetupMug
+OpenDrawer
+TurnOffMicrowave
+TurnOffSinkFaucet
+TurnOffStove
+TurnOnMicrowave
+TurnOnSinkFaucet
+TurnOnStove
+TurnSinkSpout
+```
+
 ## Reverse Data
 
 Do not mix future-to-past reverse rows into the base run.
