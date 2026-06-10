@@ -119,3 +119,15 @@ Cosmos output = counterfactual P(a)
 ```
 
 That distinction matters for the research claim.
+
+### Cosmos 3 LIBERO I2V Smoke
+
+```text
+experiments/phase3/run_cosmos3_libero_i2v_smoke.py
+```
+
+Meaning:
+
+- smoke test for base Cosmos3-Nano image-to-video on LIBERO demo first frames,
+- saves generated video, input frame, real future reference, and qualitative contact sheet,
+- not a policy rollout and not a Phase 3 deviation run by itself.

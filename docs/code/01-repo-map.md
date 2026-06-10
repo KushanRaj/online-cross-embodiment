@@ -79,6 +79,7 @@ Current runners:
 - `experiments/phase3/run_idm_as_policy_robocasa.py`
 - `experiments/phase3/run_idm_as_policy_libero.py`
 - `experiments/phase3/run_libero_policy_cosmos_probe.py`
+- `experiments/phase3/run_cosmos3_libero_i2v_smoke.py`
 - `experiments/phase3/run_cosmos3_robocasa_i2v_smoke.py`
 
 Current eval/render:
