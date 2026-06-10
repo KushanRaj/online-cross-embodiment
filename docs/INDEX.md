@@ -84,6 +84,7 @@ Each plan bundle is a small repository of micro-documents. Read the bundle READM
 | [papers/paper-catalog.md](../papers/paper-catalog.md) | Paper inventory. |
 | [papers/](../papers/) | Individual paper notes. |
 | [experiment-design/reports/](../experiment-design/reports/) | Larger synthesis reports: datasets, benchmarks, training methodology, compute, public review. |
+| [Low-Level Controller Data Requirements](../experiment-design/reports/Low-Level%20Controller%20Data%20Requirements.md) | Focused retrieval note for how much robot observation-action data each model used to make the controller work. |
 | [experiment-design/](../experiment-design/) | Older but still useful experiment notes and task catalogues. |
 
 ## Minimum Read Order Before Experiment Work
