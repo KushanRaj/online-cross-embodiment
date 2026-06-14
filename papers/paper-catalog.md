@@ -7,6 +7,7 @@ This catalog groups the local papers by experimental role. The repo does not cur
 | Paper | Local file | Why it belongs here |
 | --- | --- | --- |
 | DROID: A Large-Scale In-The-Wild Robot Manipulation Dataset | external: https://arxiv.org/abs/2403.12945 | Core real robot manipulation dataset/platform: 76k trajectories, 350 hours, 564 scenes, 84 tasks. Important for DreamZero, pi0.5-DROID, MolmoAct2-DROID context. |
+| MobileEgo Anywhere: Open Infrastructure for Long Horizon Egocentric Data on Commodity Hardware | `pdfs/2605.05945.pdf` | STERA/iPhone Pro capture pipeline for long-horizon egocentric RGB-D, ARKit pose, depth, MANO-style hand annotations, and training-ready exports. Relevant as a commodity capture/data pipeline; the paper does not present a ready real-to-sim environment export stack. |
 | MolmoSpaces: A Large-Scale Open Ecosystem for Robot Navigation and Manipulation | `pdfs/MolmoSpaces.pdf` | Sim/eval ecosystem and benchmark. DROID-style Franka manipulation setup, perturbation axes, zero-shot navigation/manipulation tasks. |
 | PointWorld: A Multimodal 3D Scene Benchmark for Vision-Language Models | `pdfs/PointWorld.pdf` | 3D scene/benchmark paper, relevant as environment/scene understanding substrate rather than policy engine. |
 | Sim2Real-AD | `pdfs/Sim2Real.pdf` | Sim-to-real/autonomous driving dataset/benchmark style paper. Useful mostly as transfer/evaluation reference. |
