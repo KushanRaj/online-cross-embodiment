@@ -9,6 +9,7 @@ Runbooks are operational recipes. They point to existing scripts and state expec
 | [phase3-evaluate-and-render.md](phase3-evaluate-and-render.md) | Evaluating online rollouts and rendering videos. |
 | [adding-a-new-policy.md](adding-a-new-policy.md) | Adding a new policy to Phase 3. |
 | [adding-a-new-environment.md](adding-a-new-environment.md) | Adding a new environment/task suite. |
+| [07-molmoact2-so101-live-run.md](07-molmoact2-so101-live-run.md) | SO-101 live MolmoAct2 remote-inference setup and artifact collection. |
 
 ## Before Any Run
 
