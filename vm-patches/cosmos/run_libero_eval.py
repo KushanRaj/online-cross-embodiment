@@ -109,11 +109,13 @@ Usage examples:
 import json
 import logging
 import os
+import sys
 import time
 import traceback
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
 import draccus
@@ -152,6 +154,17 @@ from cosmos_policy.experiments.robot.robot_utils import (
     setup_logging,
 )
 from cosmos_policy.utils.utils import jpeg_encode_image, set_seed_everywhere
+
+for parent in Path(__file__).resolve().parents:
+    if (parent / "experiments/cross_embodiment/libero_robot_adapter.py").is_file():
+        sys.path.insert(0, str(parent))
+        break
+
+from experiments.cross_embodiment.libero_robot_adapter import (
+    DEFAULT_CAMERA_NAMES,
+    make_libero_env,
+    set_libero_initial_state_compatible,
+)
 
 # Cosmos Policy latent sequence indices
 # 0: blank, 1: curr proprio, 2: curr wrist img, 3: curr primary img, 4: action, 5: future proprio, 6: future wrist img, 7: future primary img, 8: value
@@ -246,6 +259,8 @@ class PolicyEvalConfig:
     num_trials_per_task: int = 50                                        # Number of rollouts per task
     initial_states_path: str = "DEFAULT"                                 # "DEFAULT", or path to initial states JSON file
     env_img_res: int = 256                                               # Resolution for rendering environment images (not policy input resolution)
+    robot: str = "Panda"                                                 # LIBERO robot name; non-Panda swaps keep object init state by name
+    controller: str = "OSC_POSE"                                         # robosuite controller used by LIBERO env
 
     #################################################################################################################
     # Utils
@@ -342,6 +357,7 @@ def prepare_observation(obs, resize_size, flip_images: bool = False):
 def run_episode(
     cfg: PolicyEvalConfig,
     env,
+    task,
     task_description: str,
     model,
     planning_model,
@@ -360,7 +376,15 @@ def run_episode(
 
     # Set initial state if provided
     if initial_state is not None:
-        obs = env.set_init_state(initial_state)
+        obs = set_libero_initial_state_compatible(
+            env,
+            task,
+            initial_state,
+            resolution=cfg.env_img_res,
+            robot=cfg.robot,
+            controller=cfg.controller,
+            camera_names=DEFAULT_CAMERA_NAMES,
+        )
     else:
         obs = env.get_observation()
 
@@ -648,6 +672,8 @@ def run_episode(
             proprio=np.stack(proprio_list, axis=0),  # (T, D)
             actions=np.stack(actions_list, axis=0),  # (T, action_dim)
             success=success,
+            robot=cfg.robot,
+            controller=cfg.controller,
         )
         if len(query_t_list) > 0:
             collected_data["query_t"] = np.asarray(query_t_list, dtype=np.int32)
@@ -704,7 +730,16 @@ def run_task(
     initial_states, all_initial_states = load_initial_states(cfg, task_suite, task_id, log_file)
 
     # Initialize environment and get task description
-    env, task_description = get_libero_env(task, cfg.model_family, resolution=cfg.env_img_res)
+    if cfg.robot == "Panda" and cfg.controller == "OSC_POSE":
+        env, task_description = get_libero_env(task, cfg.model_family, resolution=cfg.env_img_res)
+    else:
+        env, task_description = make_libero_env(
+            task,
+            resolution=cfg.env_img_res,
+            robot=cfg.robot,
+            controller=cfg.controller,
+            camera_names=DEFAULT_CAMERA_NAMES,
+        )
     canonical_task_description = task_description
     if cfg.prompt_override is not None:
         task_description = cfg.prompt_override
@@ -741,6 +776,7 @@ def run_task(
         success, replay_images, replay_wrist_images, future_image_predictions_list, collected_data = run_episode(
             cfg,
             env,
+            task,
             task_description,
             model,
             planning_model,

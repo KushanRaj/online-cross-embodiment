@@ -10,25 +10,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 import imageio.v2 as imageio
 import numpy as np
 
+for parent in Path(__file__).resolve().parents:
+    if (parent / "experiments/cross_embodiment/libero_robot_adapter.py").is_file():
+        sys.path.insert(0, str(parent))
+        break
 
-def register_mounted_aliases() -> None:
-    """Register Mounted{Robot} aliases expected by LIBERO tabletop tasks."""
-    from robosuite.models.robots.manipulators import IIWA, Jaco, Kinova3, Sawyer, UR5e
-    from robosuite.robots import ROBOT_CLASS_MAPPING
-    from robosuite.robots.single_arm import SingleArm
-
-    for base_cls in [Sawyer, Jaco, Kinova3, UR5e, IIWA]:
-        name = f"Mounted{base_cls.__name__}"
-        if name not in ROBOT_CLASS_MAPPING:
-            # RobotModelMeta registers this class name in robosuite's model registry.
-            type(name, (base_cls,), {})
-            ROBOT_CLASS_MAPPING[name] = SingleArm
+from experiments.cross_embodiment.libero_robot_adapter import register_mounted_aliases
 
 
 def to_jsonable(value: Any) -> Any:

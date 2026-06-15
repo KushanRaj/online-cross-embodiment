@@ -17,6 +17,17 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 
+for parent in Path(__file__).resolve().parents:
+    if (parent / "experiments/cross_embodiment/libero_robot_adapter.py").is_file():
+        sys.path.insert(0, str(parent))
+        break
+
+from experiments.cross_embodiment.libero_robot_adapter import (
+    DEFAULT_CAMERA_NAMES,
+    make_libero_env,
+    set_libero_initial_state_compatible,
+)
+
 
 def _add_path(path: str) -> None:
     if path and path not in sys.path:
@@ -51,6 +62,7 @@ def _write_episode_h5(
     run_id_note: str,
     task_description: str,
     policy_name: str,
+    policy_mode: str,
     collected: dict[str, Any],
     jpeg_encode_image,
     jpeg: bool,
@@ -70,7 +82,7 @@ def _write_episode_h5(
                 h5.attrs[key] = value
         h5.attrs["task_description"] = task_description
         h5.attrs["policy_name"] = policy_name
-        h5.attrs["policy_mode"] = "external_policy_with_cosmos_future_probe"
+        h5.attrs["policy_mode"] = policy_mode
     return path
 
 
@@ -217,7 +229,7 @@ def main() -> None:
     parser.add_argument("--cosmos-policy-repo", default="/home/ubuntu/robotics/repos/cosmos-policy")
     parser.add_argument("--openpi-repo", default="/home/ubuntu/robotics/repos/PolaRiS/third_party/openpi")
     parser.add_argument("--out-dir", required=True)
-    parser.add_argument("--policy", choices=["pi05", "molmo"], required=True)
+    parser.add_argument("--policy", choices=["cosmos", "pi05", "molmo"], required=True)
     parser.add_argument("--pi-host", default="127.0.0.1")
     parser.add_argument("--pi-port", type=int, default=8010)
     parser.add_argument("--molmo-repo-id", default="allenai/MolmoAct2-LIBERO")
@@ -234,6 +246,8 @@ def main() -> None:
     parser.add_argument("--resize-size", type=int, default=224)
     parser.add_argument("--env-img-res", type=int, default=256)
     parser.add_argument("--num-denoising-steps-action", type=int, default=5)
+    parser.add_argument("--robot", default="Panda", help="LIBERO robot name, e.g. Panda, UR5e, Kinova3, Jaco, IIWA")
+    parser.add_argument("--controller", default="OSC_POSE", help="robosuite controller name")
     args = parser.parse_args()
 
     _add_path(args.cosmos_policy_repo)
@@ -248,7 +262,6 @@ def main() -> None:
     )
     from cosmos_policy.experiments.robot.libero.libero_utils import (
         get_libero_dummy_action,
-        get_libero_env,
         save_rollout_video,
         save_rollout_video_with_future_image_predictions,
     )
@@ -303,8 +316,14 @@ def main() -> None:
     cosmos_model, cosmos_config = get_model(cfg)
     assert cfg.chunk_size == cosmos_config.dataloader_train.dataset.chunk_size
 
-    if args.policy == "pi05":
-        policy: PolicyAdapter = OpenPIWebsocketPolicy(args.openpi_repo, args.pi_host, args.pi_port, args.resize_size)
+    if args.policy == "cosmos":
+        policy: PolicyAdapter | None = None
+        policy_name = "cosmos_policy_libero"
+        policy_mode = "cosmos_policy_with_cosmos_future_probe"
+    elif args.policy == "pi05":
+        policy = OpenPIWebsocketPolicy(args.openpi_repo, args.pi_host, args.pi_port, args.resize_size)
+        policy_name = policy.name
+        policy_mode = "external_policy_with_cosmos_future_probe"
     else:
         policy = MolmoAct2Policy(
             args.molmo_repo_id,
@@ -312,6 +331,8 @@ def main() -> None:
             args.molmo_dtype,
             args.molmo_enable_cuda_graph,
         )
+        policy_name = policy.name
+        policy_mode = "external_policy_with_cosmos_future_probe"
 
     benchmark_dict = benchmark.get_benchmark_dict()
     task_suite = benchmark_dict[cfg.task_suite_name]()
@@ -324,11 +345,25 @@ def main() -> None:
     for task_id in tqdm(task_ids, desc="tasks"):
         task = task_suite.get_task(task_id)
         initial_states = task_suite.get_task_init_states(task_id)
-        env, task_description = get_libero_env(task, cfg.model_family, resolution=args.env_img_res)
+        env, task_description = make_libero_env(
+            task,
+            resolution=args.env_img_res,
+            robot=args.robot,
+            controller=args.controller,
+            camera_names=DEFAULT_CAMERA_NAMES,
+        )
 
         for trial_idx in tqdm(range(args.num_trials_per_task), desc=f"task {task_id}", leave=False):
             env.reset()
-            obs = env.set_init_state(initial_states[trial_idx])
+            obs = set_libero_initial_state_compatible(
+                env,
+                task,
+                initial_states[trial_idx],
+                resolution=args.env_img_res,
+                robot=args.robot,
+                controller=args.controller,
+                camera_names=DEFAULT_CAMERA_NAMES,
+            )
             action_queue: deque[np.ndarray] = deque()
             cosmos_action_queue: deque[np.ndarray] = deque()
             replay_images: list[np.ndarray] = []
@@ -401,7 +436,10 @@ def main() -> None:
                         future_predictions.append(future)
 
                     assert pending_probe is not None
-                    policy_prediction = policy.predict_chunk(obs, task_description, args.policy_prediction_steps)
+                    if policy is None:
+                        policy_prediction = pending_probe["cosmos_chunk"]
+                    else:
+                        policy_prediction = policy.predict_chunk(obs, task_description, args.policy_prediction_steps)
                     remaining = args.horizon - int(pending_probe["scheduled"])
                     execute_count = min(args.policy_execute_steps, remaining, len(policy_prediction))
                     if execute_count <= 0:
@@ -432,7 +470,7 @@ def main() -> None:
                         pending_probe = None
                     print(
                         {
-                            "policy": policy.name,
+                            "policy": policy_name,
                             "task": task_id,
                             "trial": trial_idx,
                             "t": t,
@@ -487,6 +525,8 @@ def main() -> None:
                 "query_values": np.asarray(query_values, dtype=np.float32),
                 "query_future_primary_images": np.stack(query_future_primary, axis=0),
                 "success": success,
+                "robot": args.robot,
+                "controller": args.controller,
             }
             if query_future_wrist:
                 collected["query_future_wrist_images"] = np.stack(query_future_wrist, axis=0)
@@ -496,21 +536,24 @@ def main() -> None:
                 task_id,
                 total_episodes,
                 success,
-                f"{policy.name}-{args.run_id_note}",
+                f"{policy_name}-{args.run_id_note}",
                 task_description,
-                policy.name,
+                policy_name,
+                policy_mode,
                 collected,
                 jpeg_encode_image,
                 cfg.jpeg_compress,
             )
             row = {
-                "policy": policy.name,
+                "policy": policy_name,
                 "task_id": task_id,
                 "trial_idx": trial_idx,
                 "episode": total_episodes,
                 "success": success,
                 "steps": len(actions_list),
                 "queries": len(query_t),
+                "robot": args.robot,
+                "controller": args.controller,
                 "task_description": task_description,
                 "h5": str(h5_path),
             }
@@ -518,8 +561,8 @@ def main() -> None:
             print(row, flush=True)
 
     summary = {
-        "mode": "external_policy_with_cosmos_future_probe",
-        "policy": policy.name,
+        "mode": policy_mode,
+        "policy": policy_name,
         "episodes": total_episodes,
         "successes": total_successes,
         "success_rate": total_successes / max(1, total_episodes),
@@ -528,6 +571,8 @@ def main() -> None:
         "horizon": args.horizon,
         "policy_prediction_steps": args.policy_prediction_steps,
         "policy_execute_steps": args.policy_execute_steps,
+        "robot": args.robot,
+        "controller": args.controller,
         "cosmos_ckpt": "nvidia/Cosmos-Policy-LIBERO-Predict2-2B",
         "note": (
             "query_action_chunks is assembled from two policy prefixes by default: "
