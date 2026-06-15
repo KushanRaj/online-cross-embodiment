@@ -81,20 +81,25 @@ def _make_contact_sheet(
     case_name: str,
     instruction: str,
     input_image: Image.Image,
-    real_future: Image.Image,
+    real_future: Image.Image | None,
     generated_frames: list[Image.Image],
     output_path: Path,
     cell: int,
 ) -> None:
-    columns = 2 + len(generated_frames)
+    columns = 1 + (1 if real_future is not None else 0) + len(generated_frames)
     header_h = 58
     sheet = Image.new("RGB", (columns * cell, header_h + cell), (245, 245, 245))
     draw = ImageDraw.Draw(sheet)
     draw.text((8, 8), case_name, fill=(0, 0, 0))
     draw.text((8, 30), instruction[:150], fill=(40, 40, 40))
 
-    tiles = [input_image, real_future, *generated_frames]
-    labels = ["input t0", "real future", *[f"gen f{i}" for i in range(len(generated_frames))]]
+    tiles = [input_image]
+    labels = ["input t0"]
+    if real_future is not None:
+        tiles.append(real_future)
+        labels.append("real future")
+    tiles.extend(generated_frames)
+    labels.extend([f"gen f{i}" for i in range(len(generated_frames))])
     for idx, (tile, label) in enumerate(zip(tiles, labels)):
         x = idx * cell
         sheet.paste(tile.resize((cell, cell), Image.Resampling.BICUBIC), (x, header_h))
@@ -195,6 +200,93 @@ def run_case(
     }
 
 
+def run_image_case(
+    *,
+    pipe: Cosmos3OmniPipeline,
+    checkpoint: Path,
+    out_dir: Path,
+    name: str,
+    image_path: Path,
+    instruction: str,
+    prompt_suffix: str,
+    seed: int,
+    num_frames: int,
+    num_steps: int,
+    fps: int,
+    size: int,
+    guidance_scale: float,
+) -> dict:
+    case_dir = out_dir / name
+    case_dir.mkdir(parents=True, exist_ok=True)
+
+    input_image = Image.open(image_path).convert("RGB").resize(
+        (size, size), Image.Resampling.BICUBIC
+    )
+    input_path = case_dir / "input_t0.png"
+    input_image.save(input_path)
+
+    prompt = (
+        "A realistic fixed-camera robot manipulation video. "
+        f"The task is: {instruction} "
+        "Continue from the exact starting frame. The robot arm should begin the manipulation, "
+        "keep the same tabletop layout, keep the same objects and camera view, and avoid changing object identity. "
+        f"{prompt_suffix}"
+    ).strip()
+    output_path = case_dir / "cosmos3_nano_i2v.mp4"
+
+    generator = torch.Generator(device="cuda").manual_seed(seed)
+    start = time.time()
+    result = pipe(
+        prompt=prompt,
+        negative_prompt=NEGATIVE_PROMPT,
+        image=input_image,
+        num_frames=num_frames,
+        height=size,
+        width=size,
+        fps=fps,
+        num_inference_steps=num_steps,
+        guidance_scale=guidance_scale,
+        enable_sound=False,
+        add_resolution_template=False,
+        add_duration_template=False,
+        enable_safety_check=False,
+        generator=generator,
+    )
+    elapsed_s = time.time() - start
+    export_to_video(result.video, str(output_path), fps=fps, macro_block_size=1)
+
+    generated_frames = _sample_video_frames(output_path, count=4)
+    contact_path = case_dir / "qualitative_contact_sheet.png"
+    _make_contact_sheet(
+        case_name=name,
+        instruction=instruction,
+        input_image=input_image,
+        real_future=None,
+        generated_frames=generated_frames,
+        output_path=contact_path,
+        cell=size,
+    )
+
+    return {
+        "case": name,
+        "checkpoint": str(checkpoint),
+        "image_path": str(image_path),
+        "instruction": instruction,
+        "seed": seed,
+        "num_frames": num_frames,
+        "num_steps": num_steps,
+        "fps": fps,
+        "height": size,
+        "width": size,
+        "guidance_scale": guidance_scale,
+        "elapsed_s": elapsed_s,
+        "input_path": str(input_path),
+        "video_path": str(output_path),
+        "contact_sheet_path": str(contact_path),
+        "prompt": prompt,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", default="/home/ubuntu/robotics/checkpoints/Cosmos3-Nano")
@@ -209,6 +301,9 @@ def main() -> None:
     parser.add_argument("--guidance-scale", type=float, default=4.0)
     parser.add_argument("--prompt-suffix", default="")
     parser.add_argument("--case-limit", type=int, default=2)
+    parser.add_argument("--input-image", default=None)
+    parser.add_argument("--instruction", default=None)
+    parser.add_argument("--name", default="custom_image")
     args = parser.parse_args()
 
     checkpoint = Path(args.checkpoint).expanduser()
@@ -228,27 +323,49 @@ def main() -> None:
     print("Loaded pipeline")
 
     rows = []
-    for index, (name, path, instruction) in enumerate(DEFAULT_CASES[: args.case_limit]):
+    if args.input_image:
+        if not args.instruction:
+            raise ValueError("--instruction is required with --input-image")
         rows.append(
-            run_case(
+            run_image_case(
                 pipe=pipe,
                 checkpoint=checkpoint,
                 out_dir=out_dir,
-                name=f"{index:02d}_{name}",
-                hdf5_path=Path(path),
-                instruction=instruction,
+                name=args.name,
+                image_path=Path(args.input_image),
+                instruction=args.instruction,
                 prompt_suffix=args.prompt_suffix,
-                seed=args.seed + index,
+                seed=args.seed,
                 num_frames=args.num_frames,
                 num_steps=args.num_steps,
                 fps=args.fps,
                 size=args.size,
-                future_t=args.future_t,
-                demo_index=args.demo_index,
                 guidance_scale=args.guidance_scale,
             )
         )
         print(json.dumps(rows[-1], indent=2))
+    else:
+        for index, (name, path, instruction) in enumerate(DEFAULT_CASES[: args.case_limit]):
+            rows.append(
+                run_case(
+                    pipe=pipe,
+                    checkpoint=checkpoint,
+                    out_dir=out_dir,
+                    name=f"{index:02d}_{name}",
+                    hdf5_path=Path(path),
+                    instruction=instruction,
+                    prompt_suffix=args.prompt_suffix,
+                    seed=args.seed + index,
+                    num_frames=args.num_frames,
+                    num_steps=args.num_steps,
+                    fps=args.fps,
+                    size=args.size,
+                    future_t=args.future_t,
+                    demo_index=args.demo_index,
+                    guidance_scale=args.guidance_scale,
+                )
+            )
+            print(json.dumps(rows[-1], indent=2))
 
     summary_path = out_dir / "summary.json"
     summary_path.write_text(json.dumps({"runs": rows}, indent=2) + "\n")
