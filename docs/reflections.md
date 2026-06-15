@@ -36,6 +36,11 @@ Canonical current files:
 - `experiments/phase3/plot_deviation_diagnostics.py`
 - `experiments/phase3/make_prediction_metric_videos.py`
 
+SO101/MolmoAct2 live-control artifacts are not Phase 3 HDF5 artifacts. If a
+camera/action-log renderer is useful, put it in tracked SO101/MolmoAct2 tooling
+and reuse it. Do not create a fresh `render_*.py` inside each downloaded
+`run-artifacts/` bundle.
+
 ## No Silent Experimental Drift
 
 The user must be told before changing:

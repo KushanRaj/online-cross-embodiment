@@ -129,3 +129,29 @@ Correct version:
 execution panel uses primary_images
 active query/chunk is overlaid on dense execution time
 ```
+
+## SO101 / MolmoAct2 Live-Control Videos
+
+The SO101/MolmoAct2 live-control runs are a separate artifact family from Phase
+3 Cosmos deviation HDF5 runs. They currently log raw camera frames and robot
+commands under:
+
+```text
+external/molmoact2-so101/runs/<run-name>/
+```
+
+Downloaded bundles are mirrored under:
+
+```text
+run-artifacts/molmoact2_bundle_20260615-133148/local_runs/
+```
+
+The live-control contract is:
+
+- do not use the Phase 3 HDF5 renderer unless the data has the Phase 3 HDF5
+  schema,
+- do not create one-off renderers inside each artifact bundle,
+- if SO101 action-trace videos are needed again, promote the existing temporary
+  bundle renderer into the tracked SO101/MolmoAct2 tooling and reuse that path,
+- keep raw `action_log.jsonl` as the source of truth for chunk, target, and hold
+  timing.

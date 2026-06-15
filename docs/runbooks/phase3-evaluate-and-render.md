@@ -78,6 +78,25 @@ Do not rewrite this layout.
 
 If an HTML index is needed, point it at the generated videos and plots. Do not change the generated video layout to make HTML easier.
 
+## Non-Phase-3 Live-Control Bundles
+
+SO101/MolmoAct2 live-control bundles do not follow the Phase 3 HDF5 layout. They
+store camera JPGs and `action_log.jsonl` files under:
+
+```text
+external/molmoact2-so101/runs/<run-name>/
+```
+
+or, after download:
+
+```text
+run-artifacts/molmoact2_bundle_20260615-133148/local_runs/
+```
+
+Do not adapt the Phase 3 renderer by copying it into a run artifact folder. If
+the SO101 camera/action-trace video is needed again, move the temporary bundle
+renderer into tracked SO101/MolmoAct2 tooling first, then run that tracked tool.
+
 ## Sanity Checklist
 
 - Does the video use dense `primary_images`, not sparse query frames?
