@@ -93,6 +93,29 @@ def copy_object_state(source_env, target_env) -> None:
     target_env.sim.forward()
 
 
+def adapt_observation_for_libero_policy(obs: dict[str, Any]) -> dict[str, Any]:
+    """Project swapped-robot observations to the Panda LIBERO policy contract.
+
+    Cosmos/OpenPI LIBERO checkpoints were trained with Panda observations where
+    ``robot0_gripper_qpos`` has width 2. Other robosuite grippers can expose
+    more joint positions. For this adapter probe, keep EEF pose in the target
+    robot's world frame but compress gripper proprio to a two-value opening
+    proxy so model input width stays unchanged.
+    """
+    gripper_qpos = np.asarray(obs.get("robot0_gripper_qpos", []), dtype=np.float32).reshape(-1)
+    if gripper_qpos.shape[0] <= 2:
+        return obs
+
+    adapted = dict(obs)
+    opening = float(np.mean(gripper_qpos))
+    adapted["robot0_gripper_qpos"] = np.asarray([opening, -opening], dtype=np.float32)
+    if "robot0_gripper_qvel" in obs:
+        gripper_qvel = np.asarray(obs["robot0_gripper_qvel"], dtype=np.float32).reshape(-1)
+        velocity = float(np.mean(gripper_qvel)) if gripper_qvel.size else 0.0
+        adapted["robot0_gripper_qvel"] = np.asarray([velocity, -velocity], dtype=np.float32)
+    return adapted
+
+
 def set_libero_initial_state_compatible(
     env,
     task: Any,

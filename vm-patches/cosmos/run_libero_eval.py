@@ -162,6 +162,7 @@ for parent in Path(__file__).resolve().parents:
 
 from experiments.cross_embodiment.libero_robot_adapter import (
     DEFAULT_CAMERA_NAMES,
+    adapt_observation_for_libero_policy,
     make_libero_env,
     set_libero_initial_state_compatible,
 )
@@ -439,7 +440,7 @@ def run_episode(
                 continue
 
             # Prepare observation
-            observation = prepare_observation(obs, resize_size, cfg.flip_images)
+            observation = prepare_observation(adapt_observation_for_libero_policy(obs), resize_size, cfg.flip_images)
             replay_images.append(observation["primary_image"])
             if replay_wrist_images is not None:
                 replay_wrist_images.append(observation["wrist_image"])

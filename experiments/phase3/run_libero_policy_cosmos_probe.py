@@ -24,6 +24,7 @@ for parent in Path(__file__).resolve().parents:
 
 from experiments.cross_embodiment.libero_robot_adapter import (
     DEFAULT_CAMERA_NAMES,
+    adapt_observation_for_libero_policy,
     make_libero_env,
     set_libero_initial_state_compatible,
 )
@@ -394,7 +395,8 @@ def main() -> None:
                     t += 1
                     continue
 
-                observation = prepare_observation(obs, None, cfg.flip_images)
+                policy_obs = adapt_observation_for_libero_policy(obs)
+                observation = prepare_observation(policy_obs, None, cfg.flip_images)
                 replay_images.append(observation["primary_image"])
                 replay_wrist_images.append(observation["wrist_image"])
                 primary_images.append(observation["primary_image"])
@@ -439,7 +441,11 @@ def main() -> None:
                     if policy is None:
                         policy_prediction = pending_probe["cosmos_chunk"]
                     else:
-                        policy_prediction = policy.predict_chunk(obs, task_description, args.policy_prediction_steps)
+                        policy_prediction = policy.predict_chunk(
+                            policy_obs,
+                            task_description,
+                            args.policy_prediction_steps,
+                        )
                     remaining = args.horizon - int(pending_probe["scheduled"])
                     execute_count = min(args.policy_execute_steps, remaining, len(policy_prediction))
                     if execute_count <= 0:
