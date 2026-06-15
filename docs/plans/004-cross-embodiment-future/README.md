@@ -11,3 +11,4 @@
 | 02 | [eef-adapters](02-eef-adapters.md) | Observation/action adapters. |
 | 03 | [evaluation](03-evaluation.md) | How to test transfer. |
 | 04 | [open-questions](04-open-questions.md) | What is unresolved. |
+| 05 | [droid-to-so101-adapter](05-droid-to-so101-adapter.md) | Concrete DROID policy -> EEF -> SO101 adapter plan. |
