@@ -76,6 +76,7 @@ Each plan bundle is a small repository of micro-documents. Read the bundle READM
 | [runbooks/phase3-evaluate-and-render.md](runbooks/phase3-evaluate-and-render.md) | Evaluating rollouts and rendering canonical videos. |
 | [runbooks/adding-a-new-policy.md](runbooks/adding-a-new-policy.md) | Adding Pi/Molmo/new policy probes without changing metrics. |
 | [runbooks/adding-a-new-environment.md](runbooks/adding-a-new-environment.md) | Adding RoboCasa-style environment support. |
+| [runbooks/08-lingbot-va-ec2.md](runbooks/08-lingbot-va-ec2.md) | LingBot-VA EC2 setup, base I2VA smoke generation, and LIBERO rollout entrypoints. |
 
 ## Literature And Reports
 

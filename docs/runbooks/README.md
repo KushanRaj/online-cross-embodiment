@@ -10,6 +10,7 @@ Runbooks are operational recipes. They point to existing scripts and state expec
 | [adding-a-new-policy.md](adding-a-new-policy.md) | Adding a new policy to Phase 3. |
 | [adding-a-new-environment.md](adding-a-new-environment.md) | Adding a new environment/task suite. |
 | [07-molmoact2-so101-live-run.md](07-molmoact2-so101-live-run.md) | SO-101 live MolmoAct2 remote-inference setup and artifact collection. |
+| [08-lingbot-va-ec2.md](08-lingbot-va-ec2.md) | LingBot-VA EC2 setup, base I2VA smoke generation, and LIBERO rollout entrypoints. |
 
 ## Before Any Run
 
