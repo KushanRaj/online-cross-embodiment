@@ -12,3 +12,4 @@
 | 03 | [evaluation](03-evaluation.md) | How to test transfer. |
 | 04 | [open-questions](04-open-questions.md) | What is unresolved. |
 | 05 | [droid-to-so101-adapter](05-droid-to-so101-adapter.md) | Concrete DROID policy -> EEF -> SO101 adapter plan. |
+| 06 | [widowx-to-libero-eef](06-widowx-to-libero-eef.md) | X-VLA/OpenVLA WidowX -> LIBERO EEF transfer plan. |
