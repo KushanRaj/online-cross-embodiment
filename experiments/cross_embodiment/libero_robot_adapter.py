@@ -93,6 +93,32 @@ def copy_object_state(source_env, target_env) -> None:
     target_env.sim.forward()
 
 
+def _attach_state_source_env(target_env, source_env) -> None:
+    """Keep the Panda source env alive until the swapped target env closes.
+
+    robosuite's offscreen EGL context can be invalidated if the temporary
+    source env is closed while the target env is still rendering.
+    """
+    previous_source = getattr(target_env, "_libero_state_source_env", None)
+    if previous_source is not None:
+        previous_source.close()
+
+    original_close = getattr(target_env, "_libero_original_close", target_env.close)
+    target_env._libero_original_close = original_close
+    target_env._libero_state_source_env = source_env
+
+    def close_with_source():
+        try:
+            original_close()
+        finally:
+            attached = getattr(target_env, "_libero_state_source_env", None)
+            if attached is not None:
+                target_env._libero_state_source_env = None
+                attached.close()
+
+    target_env.close = close_with_source
+
+
 def adapt_observation_for_libero_policy(obs: dict[str, Any]) -> dict[str, Any]:
     """Project swapped-robot observations to the Panda LIBERO policy contract.
 
@@ -137,22 +163,18 @@ def set_libero_initial_state_compatible(
     if robot == "Panda":
         return env.set_init_state(initial_state)
 
-    source_env = None
-    try:
-        source_env, _ = make_libero_env(
-            task,
-            resolution=resolution,
-            robot="Panda",
-            controller=controller,
-            camera_names=camera_names,
-        )
-        source_env.reset()
-        source_env.set_init_state(initial_state)
-        copy_object_state(source_env, env)
-        env.check_success()
-        env._post_process()
-        env._update_observables(force=True)
-        return env.env._get_observations()
-    finally:
-        if source_env is not None:
-            source_env.close()
+    source_env, _ = make_libero_env(
+        task,
+        resolution=resolution,
+        robot="Panda",
+        controller=controller,
+        camera_names=camera_names,
+    )
+    source_env.reset()
+    source_env.set_init_state(initial_state)
+    copy_object_state(source_env, env)
+    _attach_state_source_env(env, source_env)
+    env.check_success()
+    env._post_process()
+    env._update_observables(force=True)
+    return env.env._get_observations()
